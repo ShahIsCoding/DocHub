@@ -1,15 +1,7 @@
-
-import Editor from './components/Editor';
-import ToolBar from './components/ToolBar';
-
+import React from "react";
+import TextEditor from "./components/component/TextEditor";
 function App() {
-  return (
-    <div className="h-screen bg-slate-200">
-      <ToolBar />
-      <hr />
-      <Editor/>
-    </div>
-  );
+  return <TextEditor />;
 }
 
 export default App;

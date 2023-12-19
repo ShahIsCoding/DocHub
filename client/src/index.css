@@ -1,8 +1,52 @@
-*{
+* {
   margin: 0;
   box-sizing: border-box;
-  font-family: 'Roboto',sans-serif;
+  font-family: 'Roboto', sans-serif;
 }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.editor .ql-editor {
+  width: 8.5in;
+  height: 11in;
+  padding: 1in;
+  margin: 1rem;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, .5);
+  background-color: white;
+}
+
+.ql-container {
+  border: none;
+  display: flex;
+  justify-content: center;
+}
+
+.editor .ql-toolbar {
+  z-index: 1;
+  top: 0;
+  position: sticky;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, .5);
+  background-color: white;
+}
+
+@media print {
+  body {
+    background-color: none;
+  }
+
+  .editor .ql-container {
+    width: 6.5in;
+    height: 9in;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    align-self: flex-start;
+  }
+
+  .editor>.ql-toolbar {
+    display: none;
+  }
+
+}
