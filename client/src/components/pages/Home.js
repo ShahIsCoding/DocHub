@@ -1,12 +1,14 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
-import uuidv4 from "../utils/UUID";
+import Navbar from "../component/Navbar";
+import Templates from "../component/Templates";
+import RecentDocuments from "../component/RecentDocuments";
 
 const Home = () => {
   return (
-    <div>
-      home
-      {/* <Navigate to={`/document/${uuidv4()}`} /> */}
+    <div className="h-screen flex flex-col">
+      <Navbar />
+      <Templates />
+      <RecentDocuments />
     </div>
   );
 };
