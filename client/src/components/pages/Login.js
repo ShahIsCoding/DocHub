@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
-import docImages from "../assets/images/docImages.png";
 import { useNavigate } from "react-router-dom";
+import Logo from "../component/Logo";
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -13,16 +13,12 @@ const Login = () => {
       username,
       password,
     };
-    console.log(payload);
     navigator("/document");
   }
   return (
     <div className="h-screen bg-slate-300 flex justify-center">
       <div className="mx-auto my-auto lg:w-1/5 sm:w-2/5 w-4/5 bg-slate-100 flex flex-col rounded p-3 shadow-lg">
-        <div className="mx-auto my-3 p-3">
-          <img src={docImages} alt="docs" className="w-8 inline" />
-          <div className="inline mx-3">DocHub</div>
-        </div>
+        <Logo name logo />
         <form className="mx-auto my-1 w-full" onSubmit={handleSubmit}>
           <div className="flex justify-between items-center my-2">
             <label className="float-left mx-1">Email</label>

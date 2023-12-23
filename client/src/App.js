@@ -1,17 +1,22 @@
 import React from "react";
-import TextEditor from "./components/component/TextEditor";
-
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 
 import Home from "./components/pages/Home";
 import Login from "./components/pages/Login";
+import DocumentId from "./components/pages/DocumentId";
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/document" element={<Home />} />
+        <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/document/:id" element={<TextEditor />} />
+        <Route path="/document" element={<Home />} />
+        <Route path="/document/:id" element={<DocumentId />} />
       </Routes>
     </Router>
   );

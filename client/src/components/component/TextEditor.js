@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
-import { toolbarOptions } from "../utils/ToolbarOptions";
+import { toolbarOptions } from "../constants/ToolbarOptions";
 
 import { io } from "socket.io-client";
 

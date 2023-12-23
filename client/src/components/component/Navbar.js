@@ -3,6 +3,7 @@ import { MdMoreHoriz } from "react-icons/md";
 import { AiOutlineBars } from "react-icons/ai";
 import { IoMdSearch } from "react-icons/io";
 import docImages from "../assets/images/docImages.png";
+import Logo from "./Logo";
 const Navbar = () => {
   return (
     <div className="bg-slate-100">
@@ -10,10 +11,7 @@ const Navbar = () => {
         <div className="my-auto ml-5">
           <MdMoreHoriz fontSize="2rem" />
         </div>
-        <div className="my-auto mx-5 sm:block hidden">
-          <h1 className="inline-block px-2 text-xl ">Docs</h1>
-          <img src={docImages} alt="Docs" className="inline-block py-2 w-10" />
-        </div>
+        <Logo name logo cssName="sm:block hidden" />
         <div className="my-auto mx-5 sm:block hidden flex-1">
           <div className="flex flex-row bg-slate-200 rounded">
             <IoMdSearch fontSize="2rem" className="my-auto mx-3" />
