@@ -7,7 +7,9 @@ import SharingModel from "../component/SharingModel";
 const DocumentId = () => {
   const [documentName, setDocumentName] = useState("Untitled Document");
   const [isSharingModelOpen, setSharingModel] = useState(true);
-  function hanldeSharing() {}
+  function hanldeSharing() {
+    setSharingModel((value) => !value);
+  }
   return (
     <div className="w-screen">
       <div className="header h-20 w-full">
