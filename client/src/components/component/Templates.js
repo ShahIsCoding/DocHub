@@ -11,7 +11,7 @@ const Templates = () => {
   return (
     <div className="bg-slate-200 py-3 border">
       <div className="mx-auto w-2/3">
-        <div className="text-md">Start a new Document</div>
+        <div className="text-md py-2">Start a new Document</div>
         <div className="flex flex-row h-full gap-4 mx-3">
           <div
             className="flex flex-col text-center cursor-pointer"
