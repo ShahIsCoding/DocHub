@@ -13,7 +13,7 @@ const Login = () => {
       username,
       password,
     };
-    navigator("/document");
+    navigator("/document/home");
   }
   return (
     <div className="h-screen bg-slate-300 flex justify-center">

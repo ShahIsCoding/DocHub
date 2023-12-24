@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TextEditor from "../component/TextEditor";
 import docImages from "../assets/images/docImages.png";
 import { documentOptions } from "../constants/DocumentOptions";
@@ -10,6 +10,9 @@ const DocumentId = () => {
   function hanldeSharing() {
     setSharingModel((value) => !value);
   }
+  useEffect(() => {
+    document.title = documentName;
+  }, [documentName]);
   return (
     <div className="w-screen">
       <div className="header h-20 w-full">

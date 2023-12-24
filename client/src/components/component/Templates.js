@@ -4,9 +4,17 @@ import uuidv4 from "../utils/UUID";
 
 const Templates = () => {
   const navigate = useNavigate();
-  const handleClick = () => {
+  const handleClick = (key) => {
     let UUID = uuidv4();
-    navigate(`/document/${UUID}`);
+    switch (key) {
+      case 0:
+        navigate(`/document/whiteboard/${UUID}`);
+        break;
+
+      default:
+        navigate(`/document/doc/${UUID}`);
+        break;
+    }
   };
   return (
     <div className="bg-slate-200 py-3 border">
@@ -15,10 +23,17 @@ const Templates = () => {
         <div className="flex flex-row h-full gap-4 mx-3">
           <div
             className="flex flex-col text-center cursor-pointer"
-            onClick={handleClick}
+            onClick={() => handleClick(1)}
           >
             <div className="bg-white h-48 w-36 border"></div>
             <div className="font-bold py-2">Blank Document</div>
+          </div>
+          <div
+            className="flex flex-col text-center cursor-pointer"
+            onClick={() => handleClick(0)}
+          >
+            <div className="bg-white h-48 w-52 border rounded-md"></div>
+            <div className="font-bold py-2">Blank Whiteboard</div>
           </div>
         </div>
       </div>
