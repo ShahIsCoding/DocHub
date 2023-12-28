@@ -1,26 +1,23 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-const Canvas = ({ draw }) => {
+const Canvas = ({ Drawing, setPosition }) => {
   const canvasRef = useRef(null);
+  const [context2D, setContext] = useState(null);
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    let frameCount = 0;
-    let animationFrameId;
-    const render = () => {
-      frameCount++;
-      draw(context, frameCount);
-      animationFrameId = window.requestAnimationFrame(render);
-    };
-    render();
-    return () => {
-      window.cancelAnimationFrame(animationFrameId);
-    };
-  }, [draw]);
+    setContext(context);
+  }, []);
   return (
     <canvas
       width={window.innerWidth}
       height={window.innerHeight}
+      // onMouseDown={(e) => setPosition(e)}
+      onMouseMove={(e) => {
+        setPosition(e);
+        Drawing(e, context2D);
+      }}
+      // onMouseEnter={(e) => setPosition(e)}
       // style={{ background: "black" }}
       ref={canvasRef}
     ></canvas>

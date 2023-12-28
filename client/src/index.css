@@ -50,3 +50,19 @@
   }
 
 }
+
+.input-color {
+
+  border: none;
+  border-radius: 50%;
+  background: none;
+}
+
+.input-color::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.input-color::-webkit-color-swatch {
+  border: solid 1px #000;
+  border-radius: 50%;
+}
