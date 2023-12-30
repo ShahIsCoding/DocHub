@@ -1,52 +1,54 @@
-import React, { useState } from "react";
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
 import Canvas from "../component/Canvas";
 import {
-  WhiteboardMenu,
   WhiteboardMenuConstants,
+  WhiteboardOptionsConstants,
 } from "../constants/WhiteboardOptions";
-import { WhiteboardMenuDisplay } from "../utils/CanvasUtils";
+import { setPrevSelectedMenu } from "../redux/reducers/MenuReducer";
+import { setPosition } from "../redux/reducers/MouseReducer";
+import WhiteBoardMenuDisplay from "../component/WhiteBoardMenuDisplay";
 
 const Whiteboard = () => {
-  const [color, setColor] = useState("#000000");
-  const [size, setSize] = useState(2);
-  const [mouseData, setMouseData] = useState({ x: 0, y: 0 });
-  const [MenuPosition, setMenuPosition] = useState({
-    x: window.innerWidth / 2,
-    y: 0,
-  });
-  const [selectedMenu, setSelectedMenu] = useState(null);
-  const [prevSelection, setPrevSelection] = useState(null);
-  const { PEN, ERASE, COLOR } = WhiteboardMenuConstants;
-
+  const { PEN, ERASE } = WhiteboardMenuConstants;
+  const mouse = useSelector((state) => state.mouse);
+  const menu = useSelector((state) => state.menu);
+  const { x: posX, y: posY } = mouse;
+  const { color, size, selectedMenu, prevSelectionMenu } = menu;
+  const dispatch = useDispatch();
   const Drawing = (e, ctx) => {
     if (ctx === null) return;
     if (e.buttons !== 1) {
-      setPrevSelection(null);
+      dispatch(setPrevSelectedMenu(null));
       return;
     }
     ctx.beginPath();
-    if (prevSelection === PEN) ctx.moveTo(mouseData.x, mouseData.y);
+    if (prevSelectionMenu === PEN) ctx.moveTo(posX, posY);
     else ctx.moveTo(e.clientX, e.clientY);
-    setMouseData({
-      x: e.clientX,
-      y: e.clientY,
-    });
+    dispatch(
+      setPosition({
+        x: e.clientX,
+        y: e.clientY,
+      })
+    );
     ctx.lineTo(e.clientX, e.clientY);
     ctx.strokeStyle = color;
     ctx.lineWidth = size;
     ctx.lineCap = "round";
     ctx.stroke();
-    setPrevSelection(PEN);
+    dispatch(setPrevSelectedMenu(PEN));
   };
   const Erasing = (e, ctx) => {
     if (ctx === null) return;
     if (selectedMenu === ERASE) {
       ctx.beginPath();
       ctx.clearRect(e.clientX, e.clientY, e.clientX + size, e.clientY + size);
-      setMouseData({
-        x: e.clientX,
-        y: e.clientY,
-      });
+      dispatch(
+        setPosition({
+          x: e.clientX,
+          y: e.clientY,
+        })
+      );
     }
   };
   const getActionCallback = (e, ctx) => {
@@ -63,25 +65,8 @@ const Whiteboard = () => {
   };
   return (
     <div className="flex flex-row">
-      <div
-        className=" h-20 border p-1 flex flex-row items-center z-10 fixed"
-        style={{ left: MenuPosition.x, top: MenuPosition.y }}
-        draggable
-        onDragEnd={(e) => {
-          setMenuPosition({
-            x: e.clientX,
-            y: e.clientY,
-          });
-        }}
-      >
-        {WhiteboardMenuDisplay(
-          color,
-          setColor,
-          size,
-          setSize,
-          selectedMenu,
-          setSelectedMenu
-        )}
+      <div className=" border p-1 z-10 fixed" style={{ left: 0, top: 0 }}>
+        <WhiteBoardMenuDisplay Menu={WhiteboardOptionsConstants} />
       </div>
       <div className="w-screen h-screen">
         <Canvas actionCallback={(e, ctx) => getActionCallback(e, ctx)} />
