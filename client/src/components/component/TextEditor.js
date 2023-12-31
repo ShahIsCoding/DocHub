@@ -5,16 +5,12 @@ import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import { toolbarOptions } from "../constants/ToolbarOptions";
 
-import { io } from "socket.io-client";
-
 import {
-  handleConnection,
   handleReceivedChanges,
   handleTextChange,
 } from "../utils/TextEditorFunctions";
 
-const TextEditor = () => {
-  const [socket, setSocket] = useState();
+const TextEditor = ({ socket }) => {
   const [quill, setQuill] = useState();
   const { id: documentId } = useParams();
 
@@ -35,10 +31,6 @@ const TextEditor = () => {
     return () => {
       wrapperRef.innerHTML = "";
     };
-  }, []);
-
-  useEffect(() => {
-    handleConnection(setSocket, io);
   }, []);
 
   useEffect(() => {

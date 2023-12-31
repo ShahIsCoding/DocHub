@@ -66,7 +66,7 @@ const WhiteBoardMenuDisplay = ({ Menu }) => {
       );
     });
   };
-  return <div className="flex flex-col items-center">{MenuItems(Menu)}</div>;
+  return <div className="flex flex-row items-center">{MenuItems(Menu)}</div>;
 };
 
 export default WhiteBoardMenuDisplay;

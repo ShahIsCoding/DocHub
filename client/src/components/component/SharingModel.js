@@ -16,7 +16,6 @@ const SharingModel = ({ open, setOpen }) => {
   const [emailIdList, setEmailIdList] = useState([]);
   const [email, setEmail] = useState("");
   const location = useLocation();
-  console.log(emailIdList);
   return (
     open && (
       <div

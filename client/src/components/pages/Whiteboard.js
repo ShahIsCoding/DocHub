@@ -9,7 +9,7 @@ import { setPrevSelectedMenu } from "../redux/reducers/MenuReducer";
 import { setPosition } from "../redux/reducers/MouseReducer";
 import WhiteBoardMenuDisplay from "../component/WhiteBoardMenuDisplay";
 
-const Whiteboard = () => {
+const Whiteboard = ({ socket }) => {
   const { PEN, ERASE } = WhiteboardMenuConstants;
   const mouse = useSelector((state) => state.mouse);
   const menu = useSelector((state) => state.menu);
@@ -64,11 +64,11 @@ const Whiteboard = () => {
     }
   };
   return (
-    <div className="flex flex-row">
-      <div className=" border p-1 z-10 fixed" style={{ left: 0, top: 0 }}>
+    <div className="flex flex-col">
+      <div className=" border p-1 " style={{ left: 0, top: 0 }}>
         <WhiteBoardMenuDisplay Menu={WhiteboardOptionsConstants} />
       </div>
-      <div className="w-screen h-screen">
+      <div className="w-full h-full">
         <Canvas actionCallback={(e, ctx) => getActionCallback(e, ctx)} />
       </div>
     </div>
