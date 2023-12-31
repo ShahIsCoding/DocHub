@@ -13,8 +13,7 @@ const Whiteboard = () => {
   const { PEN, ERASE } = WhiteboardMenuConstants;
   const mouse = useSelector((state) => state.mouse);
   const menu = useSelector((state) => state.menu);
-  const { x: posX, y: posY } = mouse;
-  const { color, size, selectedMenu, prevSelectionMenu } = menu;
+  const { color, size, selectedMenu, prevSelectedMenu } = menu;
   const dispatch = useDispatch();
   const Drawing = (e, ctx) => {
     if (ctx === null) return;
@@ -23,8 +22,9 @@ const Whiteboard = () => {
       return;
     }
     ctx.beginPath();
-    if (prevSelectionMenu === PEN) ctx.moveTo(posX, posY);
-    else ctx.moveTo(e.clientX, e.clientY);
+    if (prevSelectedMenu === PEN) {
+      ctx.moveTo(mouse.posX, mouse.posY);
+    } else ctx.moveTo(e.clientX, e.clientY);
     dispatch(
       setPosition({
         x: e.clientX,

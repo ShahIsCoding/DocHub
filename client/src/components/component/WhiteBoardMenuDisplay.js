@@ -5,10 +5,12 @@ import {
   setSize,
   setColor,
 } from "../redux/reducers/MenuReducer";
+import { WhiteboardMenuConstants } from "../constants/WhiteboardOptions";
 
 const WhiteBoardMenuDisplay = ({ Menu }) => {
   const menuState = useSelector((state) => state.menu);
-  const { color, size, selectedMenu, prevSelectionMenu } = menuState;
+  const { PEN, COLOR } = WhiteboardMenuConstants;
+  const { color, size, selectedMenu } = menuState;
   const dispatch = useDispatch();
   const handleInputChoice = (key) => {
     switch (key) {
@@ -48,7 +50,9 @@ const WhiteBoardMenuDisplay = ({ Menu }) => {
           >
             <div
               className="flex flex-row"
-              onClick={(e) => dispatch(setSelectedMenu(item.Name))}
+              onClick={(e) =>
+                dispatch(setSelectedMenu(item.Name === COLOR ? PEN : item.Name))
+              }
             >
               <div className="">{item.Name}</div>
               <div className="ml-2">{item.icon}</div>

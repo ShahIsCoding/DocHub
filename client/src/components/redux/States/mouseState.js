@@ -1,4 +1,4 @@
 export const initialMouseState = {
-  x: 0,
-  y: 0,
+  posX: 0,
+  posY: 0,
 };
