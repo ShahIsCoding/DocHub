@@ -7,7 +7,11 @@ const Templates = () => {
   const navigate = useNavigate();
   const handleClick = (key) => {
     let UUID = uuidv4();
-    navigate(`/document/doc/${UUID}`, { state: { key } });
+    navigate(
+      `/document/doc/${
+        key === docType.document ? "document:" : "whiteboard:"
+      }${UUID}`
+    );
   };
   return (
     <div className="bg-slate-200 py-3 border">

@@ -1,22 +1,26 @@
 import React, { useEffect, useState } from "react";
 import docImages from "../assets/images/docImages.png";
-import { documentOptions } from "../constants/DocumentOptions";
+import { docType, documentOptions } from "../constants/DocumentOptions";
 import SharingModel from "../component/SharingModel";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { handleDocument } from "../utils/documentUtils";
 
 const DocumentId = ({ socket }) => {
   const [documentName, setDocumentName] = useState("Untitled Document");
   const [isSharingModelOpen, setSharingModel] = useState(false);
-  const location = useLocation();
-  const { key } = location.state;
+  const [type, setType] = useState(null);
+  const { id: params } = useParams();
 
   function hanldeSharing() {
     setSharingModel((value) => !value);
   }
   useEffect(() => {
     document.title = documentName;
-  }, [documentName]);
+    console.log(params.split(":"));
+    if (params !== null) {
+      setType(params.split(":")[0]);
+    }
+  }, [documentName, params]);
 
   return (
     <div className="w-screen">
@@ -55,7 +59,7 @@ const DocumentId = ({ socket }) => {
           </div>
         </div>
       </div>
-      {handleDocument(key, socket)}
+      {handleDocument(type, socket)}
       <SharingModel open={isSharingModelOpen} setOpen={setSharingModel} />
     </div>
   );

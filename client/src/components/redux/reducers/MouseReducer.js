@@ -5,18 +5,16 @@ const MouseReducer = createSlice({
   name: "mouse",
   initialState: initialMouseState,
   reducers: {
-    setPosition(state, action) {
-      state.posX = action.payload.x;
-      state.posY = action.payload.y;
+    setCurrentPosition(state, action) {
+      state.currPosX = action.payload.x;
+      state.currPosY = action.payload.y;
     },
-    setPosX(state, action) {
-      state = { ...state, posX: action.payload };
-    },
-    setPosY(state, action) {
-      state = { ...state, posY: action.payload };
+    setPreviousPosition(state, action) {
+      state.prevPosX = action.payload.x;
+      state.prevPosY = action.payload.y;
     },
   },
 });
 
-export const { setPosition, setPosX, setPosY } = MouseReducer.actions;
+export const { setCurrentPosition, setPreviousPosition } = MouseReducer.actions;
 export default MouseReducer.reducer;

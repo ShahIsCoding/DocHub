@@ -10,6 +10,7 @@ io.on("connection", (socket) => {
     socket.join(documentId);
     socket.emit("load-document", data);
     socket.on("send-changes", (delta) => {
+      console.log(delta);
       socket.broadcast.to(documentId).emit("receive-changes", delta);
     });
   });
