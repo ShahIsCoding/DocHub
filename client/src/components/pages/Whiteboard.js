@@ -6,23 +6,19 @@ import {
   WhiteboardOptionsConstants,
 } from "../constants/WhiteboardOptions";
 import { setPrevSelectedMenu } from "../redux/reducers/MenuReducer";
-import {
-  setCurrentPosition,
-  setPreviousPosition,
-} from "../redux/reducers/MouseReducer";
 import WhiteBoardMenuDisplay from "../component/WhiteBoardMenuDisplay";
 import { useParams } from "react-router-dom";
 
 const Whiteboard = ({ socket }) => {
   const { PEN, ERASE } = WhiteboardMenuConstants;
 
-  const mouse = useSelector((state) => state.mouse);
   const menu = useSelector((state) => state.menu);
   const { color, size, selectedMenu, prevSelectedMenu } = menu;
 
   const dispatch = useDispatch();
   const { id: documentId } = useParams();
   const [context2D, setContext] = useState(null);
+  const [currPos, setCurrPos] = useState({ x: null, y: null });
 
   const Drawing = (e, ctx, attributes, isRecieved) => {
     console.log({ e, ctx, attributes, isRecieved });
@@ -33,7 +29,7 @@ const Whiteboard = ({ socket }) => {
     }
     ctx.beginPath();
     if (prevSelectedMenu === PEN || isRecieved) {
-      ctx.moveTo(attributes.prevPosX, mouse.prevPosY);
+      ctx.moveTo(attributes.prevPosX, attributes.prevPosY);
     } else ctx.moveTo(attributes.currPosX, attributes.currPosY);
     ctx.lineTo(attributes.currPosX, attributes.currPosY);
     ctx.strokeStyle = attributes.color;
@@ -52,25 +48,25 @@ const Whiteboard = ({ socket }) => {
   };
   const getActionCallback = (e, ctx, attributes, isRecieved) => {
     if (!isRecieved) {
-      setPreviousPosition({ x: mouse.currPosX, y: mouse.currPosY });
-      setCurrentPosition({ x: e.clientX, y: e.clientY });
+      setCurrPos({ x: e.clientX, y: e.clientY });
     }
-    attributes = {
-      color,
-      size,
-      selectedMenu,
-      currPosX: mouse.currPosX,
-      currPosY: mouse.currPosY,
-      prevPosX: mouse.prevPosX,
-      prevPosY: mouse.prevPosY,
-    };
-    if (isRecieved) attributes = attributes;
+    let newAttributes = isRecieved
+      ? attributes
+      : {
+          color,
+          size,
+          selectedMenu,
+          currPosX: e.clientX,
+          currPosY: e.clientY,
+          prevPosX: currPos.x,
+          prevPosY: currPos.y,
+        };
     switch (selectedMenu) {
       case PEN:
-        Drawing(e, ctx, attributes, isRecieved);
+        Drawing(e, ctx, newAttributes, isRecieved);
         break;
       case ERASE:
-        Erasing(e, ctx, attributes, isRecieved);
+        Erasing(e, ctx, newAttributes, isRecieved);
         break;
       default:
         break;
@@ -84,7 +80,7 @@ const Whiteboard = ({ socket }) => {
   }, [socket, documentId]);
   useEffect(() => {
     const handleChange = (attributes) => {
-      getActionCallback({ buttons: 0 }, context2D, attributes);
+      getActionCallback({ buttons: 0 }, context2D, attributes, true);
     };
     socket.on("receive-changes", handleChange);
   }, [socket]);

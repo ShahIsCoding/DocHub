@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import docImages from "../assets/images/docImages.png";
-import { docType, documentOptions } from "../constants/DocumentOptions";
+import { documentOptions } from "../constants/DocumentOptions";
 import SharingModel from "../component/SharingModel";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { handleDocument } from "../utils/documentUtils";
 
 const DocumentId = ({ socket }) => {
@@ -16,7 +16,6 @@ const DocumentId = ({ socket }) => {
   }
   useEffect(() => {
     document.title = documentName;
-    console.log(params.split(":"));
     if (params !== null) {
       setType(params.split(":")[0]);
     }
