@@ -9,9 +9,9 @@ io.on("connection", (socket) => {
     const data = "";
     socket.join(documentId);
     socket.emit("load-document", data);
-    socket.on("send-changes", (delta) => {
-      console.log(delta);
-      socket.broadcast.to(documentId).emit("receive-changes", delta);
+    socket.on("send-changes", (data) => {
+      console.log(data);
+      socket.broadcast.to(documentId).emit("receive-changes", data);
     });
   });
   console.log("connected");

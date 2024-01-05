@@ -1,21 +1,23 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 
 const Canvas = (props) => {
   const canvasRef = useRef(null);
 
-  let { actionCallback, context2D, setContext } = props;
+  let { actionCallback, canvas, setCanvas } = props;
   useEffect(() => {
     const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    setContext(context);
+    setCanvas(canvas);
   }, []);
-
+  console.log(
+    canvasRef?.current?.getBoundingClientRect(),
+    canvasRef?.current?.offsetTop
+  );
   return (
     <canvas
       width={window.innerWidth}
       height={window.innerHeight}
       onMouseMove={(e) => {
-        actionCallback(e, context2D, {}, false);
+        actionCallback(e, {}, false);
       }}
       style={{ cursor: "copy", border: "1px solid black" }}
       ref={canvasRef}
