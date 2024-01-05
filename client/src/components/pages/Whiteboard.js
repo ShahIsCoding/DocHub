@@ -1,21 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import Canvas from "../component/Canvas";
 import {
   WhiteboardMenuConstants,
   WhiteboardOptionsConstants,
 } from "../constants/WhiteboardOptions";
-import { setPrevSelectedMenu } from "../redux/reducers/MenuReducer";
 import WhiteBoardMenuDisplay from "../component/WhiteBoardMenuDisplay";
 import { useParams } from "react-router-dom";
 import rough from "roughjs";
+import {
+  Drawing,
+  Erasing,
+  handleShapeCreation,
+} from "../utils/whiteboardUtils";
 const Whiteboard = ({ socket }) => {
   const { PEN, ERASE } = WhiteboardMenuConstants;
 
   const menu = useSelector((state) => state.menu);
   const { color, size, selectedMenu, prevSelectedMenu } = menu;
 
-  const dispatch = useDispatch();
   const { id: documentId } = useParams();
   const [canvas, setCanvas] = useState(null);
   const [context, setContext] = useState(null);
@@ -27,35 +30,7 @@ const Whiteboard = ({ socket }) => {
     setContext(canvas.getContext("2d"));
     setRoughContext(rough.canvas(canvas));
   }, [canvas]);
-  const Drawing = (e, ctx, attributes, isRecieved) => {
-    if (ctx === null) return;
-    if (e.buttons !== 1 && !isRecieved) {
-      dispatch(setPrevSelectedMenu(null));
-      return;
-    }
-    ctx.linearPath(
-      [
-        [attributes.prevPosX, attributes.prevPosY],
-        [attributes.currPosX, attributes.currPosY],
-      ],
-      {
-        stroke: attributes.color,
-        roughness: 0.5,
-        strokeWidth: attributes.size,
-      }
-    );
-  };
-  const Erasing = (e, context, attributes, isRecieved) => {
-    if (context === null) return;
-    if (attributes.selectedMenu === ERASE) {
-      context.clearRect(
-        attributes.currPosX,
-        attributes.currPosY,
-        attributes.size * 10,
-        attributes.size * 10
-      );
-    }
-  };
+
   const getActionCallback = (e, attributes, isRecieved) => {
     let { top, left } = canvas.getBoundingClientRect();
     let newAttributes = isRecieved
@@ -91,27 +66,15 @@ const Whiteboard = ({ socket }) => {
   };
   useEffect(() => {
     if (context === null) return;
-    switch (selectedMenu) {
-      case WhiteboardMenuConstants.SQUARE:
-        roughContext.rectangle(15, 15, 80, 80, { roughness: 0.1, fill: color });
-        break;
-      case WhiteboardMenuConstants.RECTANGLE:
-        roughContext.rectangle(15, 15, 80, 180, {
-          roughness: 0.1,
-          fill: color,
-        });
-        break;
-      case WhiteboardMenuConstants.CIRCLE:
-        roughContext.circle(115, 115, 80, 80, { roughness: 0.1, fill: color });
-      default:
-        break;
-    }
+    handleShapeCreation(selectedMenu, roughContext, { color });
   }, [selectedMenu]);
+
   useEffect(() => {
     if (socket == null) return;
     socket.once("load-document", (document) => {});
     socket.emit("get-document", documentId);
   }, [socket, documentId]);
+
   useEffect(() => {
     if (socket == null) return;
     const handleChange = (attributes) => {
