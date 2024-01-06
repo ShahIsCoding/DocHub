@@ -54,7 +54,7 @@
 .input-color {
 
   border: none;
-  border-radius: 50%;
+  border-radius: 10%;
   background: none;
 }
 
@@ -64,5 +64,5 @@
 
 .input-color::-webkit-color-swatch {
   border: solid 1px #000;
-  border-radius: 50%;
+  border-radius: 10%;
 }

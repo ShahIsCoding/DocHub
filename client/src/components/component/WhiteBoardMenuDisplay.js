@@ -18,7 +18,7 @@ const WhiteBoardMenuDisplay = ({ Menu }) => {
         return (
           <input
             type="color"
-            className="input-color w-1/5"
+            className="input-color w-2/5"
             value={color}
             onChange={(e) => dispatch(setColor(e.target.value))}
           />
