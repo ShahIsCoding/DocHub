@@ -1,19 +1,16 @@
-import { useDispatch } from "react-redux";
-import { setPrevSelectedMenu } from "../redux/reducers/MenuReducer";
 import { WhiteboardMenuConstants } from "../constants/WhiteboardOptions";
 
-const Drawing = (e, ctx, attributes, isRecieved) => {
+const Drawing = (ctx, attributes) => {
   //   const dispatch = useDispatch();
-  if (ctx === null || (e.buttons !== 1 && !isRecieved)) return;
-  ctx.linearPath(
+  if (ctx === null) return;
+  return ctx.linearPath(
     [
-      [attributes.prevPosX, attributes.prevPosY],
       [attributes.currPosX, attributes.currPosY],
+      [attributes.newPosX, attributes.newPosY],
     ],
     {
       stroke: attributes.color,
-      roughness: 0.5,
-      strokeWidth: attributes.size,
+      roughness: 0.4,
     }
   );
 };
@@ -30,28 +27,46 @@ const Erasing = (e, context, attributes, isRecieved) => {
   }
 };
 
-function handleShapeCreation(selectedMenu, roughContext, attributes) {
+function QuadCurve(generator, context, attributes) {
+  let {
+    currPosX,
+    currPosY,
+    newPosX,
+    newPosY,
+    startPosX,
+    startPosY,
+    isSquare,
+    color,
+  } = attributes;
+  let width = newPosX - startPosX;
+  let height = newPosY - startPosY;
+  if (isSquare) {
+    let modvalue = Math.min(Math.abs(width), Math.abs(height));
+    width = modvalue * (width < 0 ? -1 : 1);
+    height = modvalue * (height < 0 ? -1 : 1);
+  }
+  context.rect(startPosX, startPosY, width, height);
+  context.fillStyle = color;
+
+  let path = generator.rectangle(startPosX, startPosY, width, height, {
+    roughness: 0.2,
+    stroke: attributes.color,
+  });
+  return path;
+}
+
+const createElement = (attributes, context, generator, roughContext) => {
+  let { selectedMenu } = attributes;
+  const { PEN, ERASE, SQUARE, RECTANGLE, CIRCLE } = WhiteboardMenuConstants;
   switch (selectedMenu) {
-    case WhiteboardMenuConstants.SQUARE:
-      roughContext.rectangle(15, 15, 80, 80, {
-        roughness: 0.1,
-        fill: attributes.color,
-      });
-      break;
-    case WhiteboardMenuConstants.RECTANGLE:
-      roughContext.rectangle(15, 15, 80, 180, {
-        roughness: 0.1,
-        fill: attributes.color,
-      });
-      break;
-    case WhiteboardMenuConstants.CIRCLE:
-      roughContext.circle(115, 115, 80, 80, {
-        roughness: 0.1,
-        fill: attributes.color,
-      });
+    case PEN:
+      return Drawing(roughContext, attributes);
+    case SQUARE:
+      attributes.isSquare = true;
+    case RECTANGLE:
+      return QuadCurve(generator, context, attributes);
     default:
       break;
   }
-}
-
-export { Drawing, Erasing, handleShapeCreation };
+};
+export { createElement };

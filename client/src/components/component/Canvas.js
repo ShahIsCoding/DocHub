@@ -14,7 +14,6 @@ const Canvas = (props) => {
       width={window.innerWidth}
       height={window.innerHeight}
       onMouseMove={mouseMove}
-      style={{ cursor: "copy", border: "1px solid black" }}
       ref={canvasRef}
     ></canvas>
   );

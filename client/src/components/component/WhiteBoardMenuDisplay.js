@@ -59,9 +59,7 @@ const WhiteBoardMenuDisplay = ({ Menu }) => {
               {handleInputChoice(item.key)}
             </div>
           </div>
-          {item.child &&
-            selectedMenu === item.Name &&
-            MenuItems(item.childOptions)}
+          {item.child && MenuItems(item.childOptions)}
         </>
       );
     });
