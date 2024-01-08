@@ -34,12 +34,13 @@ const Whiteboard = ({ socket }) => {
   useEffect(() => {
     if (!context) return;
     if (elements !== undefined && elements.length > 0) {
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
       elements?.map((element, idx) => {
-        console.log(element, idx);
         roughContext.draw(element);
       });
     }
-  }, [elements]);
+  }, [elements, currElement]);
 
   const mouseMove = (e) => {
     let { buttons, clientX: positionX, clientY: positionY } = e;
@@ -54,12 +55,12 @@ const Whiteboard = ({ socket }) => {
       currPosY: currPos.y - top,
       startPosX: startPos.x === null ? positionX - left : startPos.x,
       startPosY: startPos.y === null ? positionY - top : startPos.y,
+      currElement,
     };
     setCurrPos({ x: e.clientX, y: e.clientY });
     if (selectedMenu !== null && buttons === 1) {
       startPos.x === null &&
         setStartPos({ x: positionX - left, y: positionY - top });
-      // console.log(attributes);
       currElement = createElement(attributes, context, generator, roughContext);
       setCurrElement(currElement);
     }

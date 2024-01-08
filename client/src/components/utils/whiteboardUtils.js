@@ -1,9 +1,24 @@
 import { WhiteboardMenuConstants } from "../constants/WhiteboardOptions";
 
-const Drawing = (ctx, attributes) => {
+const Drawing = (ctx, rctx, generator, attributes, isLine) => {
   //   const dispatch = useDispatch();
   if (ctx === null) return;
-  return ctx.linearPath(
+  if (isLine === true) {
+    let path = generator.line(
+      attributes.startPosX,
+      attributes.startPosY,
+      attributes.newPosX,
+      attributes.newPosY,
+      {
+        roughness: 0.9,
+        stroke: attributes.color,
+      }
+    );
+    rctx.draw(path);
+    return path;
+  }
+  let prevpath;
+  let path = generator.linearPath(
     [
       [attributes.currPosX, attributes.currPosY],
       [attributes.newPosX, attributes.newPosY],
@@ -13,6 +28,15 @@ const Drawing = (ctx, attributes) => {
       roughness: 0.4,
     }
   );
+  // rctx.draw(path);
+  // console.log("sending", path, attributes.currElement);
+  if (attributes.currElement !== null) {
+    prevpath = attributes.currElement;
+    prevpath.sets[0].ops.push(...path.sets[0].ops);
+  }
+  let finalPath = attributes.currElement !== null ? prevpath : path;
+  rctx.draw(finalPath);
+  return finalPath;
 };
 const Erasing = (e, context, attributes, isRecieved) => {
   const { PEN, ERASE } = WhiteboardMenuConstants;
@@ -27,7 +51,7 @@ const Erasing = (e, context, attributes, isRecieved) => {
   }
 };
 
-function QuadCurve(generator, context, attributes) {
+function QuadCurve(ctx, rctx, generator, attributes) {
   let {
     currPosX,
     currPosY,
@@ -45,26 +69,27 @@ function QuadCurve(generator, context, attributes) {
     width = modvalue * (width < 0 ? -1 : 1);
     height = modvalue * (height < 0 ? -1 : 1);
   }
-  context.rect(startPosX, startPosY, width, height);
-  context.fillStyle = color;
 
   let path = generator.rectangle(startPosX, startPosY, width, height, {
     roughness: 0.2,
     stroke: attributes.color,
   });
+  rctx.draw(path);
   return path;
 }
 
 const createElement = (attributes, context, generator, roughContext) => {
   let { selectedMenu } = attributes;
-  const { PEN, ERASE, SQUARE, RECTANGLE, CIRCLE } = WhiteboardMenuConstants;
+  const { PEN, ERASE, SQUARE, RECTANGLE, LINE } = WhiteboardMenuConstants;
   switch (selectedMenu) {
+    case LINE:
+      return Drawing(context, roughContext, generator, attributes, true);
     case PEN:
-      return Drawing(roughContext, attributes);
+      return Drawing(context, roughContext, generator, attributes, false);
     case SQUARE:
       attributes.isSquare = true;
     case RECTANGLE:
-      return QuadCurve(generator, context, attributes);
+      return QuadCurve(context, roughContext, generator, attributes);
     default:
       break;
   }

@@ -9,21 +9,21 @@ import { WhiteboardMenuConstants } from "../constants/WhiteboardOptions";
 
 const WhiteBoardMenuDisplay = ({ Menu }) => {
   const menuState = useSelector((state) => state.menu);
-  const { PEN, COLOR } = WhiteboardMenuConstants;
+  const { PEN, COLOR, SIZE } = WhiteboardMenuConstants;
   const { color, size, selectedMenu } = menuState;
   const dispatch = useDispatch();
   const handleInputChoice = (key) => {
     switch (key) {
-      case 1:
+      case COLOR:
         return (
           <input
             type="color"
-            className="input-color w-2/5"
+            className="input-color"
             value={color}
             onChange={(e) => dispatch(setColor(e.target.value))}
           />
         );
-      case 2:
+      case SIZE:
         return (
           <input
             type="number"
@@ -42,24 +42,34 @@ const WhiteBoardMenuDisplay = ({ Menu }) => {
     return Menu.map((item, index) => {
       return (
         <>
-          <div
-            key={item.key}
-            className={`h-10 w-28 px-2 py-2 m-2 text-center rounded cursor-pointer ${
-              selectedMenu === item.Name ? "bg-orange-300" : "bg-blue-300"
-            }`}
-          >
-            <div
-              className="flex flex-row"
-              onClick={(e) =>
-                dispatch(setSelectedMenu(item.Name === COLOR ? PEN : item.Name))
-              }
-            >
-              <div className="">{item.Name}</div>
-              <div className="ml-2">{item.icon}</div>
-              {handleInputChoice(item.key)}
+          {item.child ? (
+            <div className="border flex flex-col mx-2 rounded">
+              <div className="flex flex-row ">
+                {MenuItems(item.childOptions)}
+              </div>
+              <h6 className="w-full bg-slate-300 text-center">{item.Name}</h6>
             </div>
-          </div>
-          {item.child && MenuItems(item.childOptions)}
+          ) : (
+            <div
+              key={item.key}
+              className={`h-10 p-2 m-2 text-center rounded cursor-pointer ${
+                selectedMenu === item.Name ? "bg-orange-300" : "bg-blue-300"
+              }`}
+            >
+              <div
+                className="flex flex-row my-auto"
+                onClick={(e) =>
+                  dispatch(
+                    setSelectedMenu(item.Name === COLOR ? PEN : item.Name)
+                  )
+                }
+              >
+                <div className="">{item.Name}</div>
+                {/* <div className="ml-2">{item.icon}</div> */}
+                {handleInputChoice(item.Name)}
+              </div>
+            </div>
+          )}
         </>
       );
     });
