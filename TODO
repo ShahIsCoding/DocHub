@@ -1,5 +1,13 @@
-TODO: EKLSF;
-TODO: S;
-LENF;
-DONE:;
-LSN;
+TODO: 
+    [*] boundary for rect
+    [] eraser 
+    [] move function 
+    [] color inside the shape
+    [] socket for whiteboard
+    [] backend
+    [] database
+    [] oauth 
+    
+
+    [] more shape
+    [] more tool
