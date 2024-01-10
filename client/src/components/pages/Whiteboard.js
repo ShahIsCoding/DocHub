@@ -17,12 +17,10 @@ const Whiteboard = ({ socket }) => {
   const [context, setContext] = useState(null);
   const [roughContext, setRoughContext] = useState(null);
   const [generator, setGenerator] = useState(null);
-  //  Positions
-  let [currPos, setCurrPos] = useState({ x: null, y: null });
-  let [startPos, setStartPos] = useState({ x: null, y: null });
+
   // created paths
   const [elements, setElements] = useState([]);
-  let [currElement, setCurrElement] = useState(null);
+  const [drawing, setDrawing] = useState(false);
 
   useEffect(() => {
     if (canvas === null) return;
@@ -36,14 +34,14 @@ const Whiteboard = ({ socket }) => {
     if (elements !== undefined && elements.length > 0) {
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-      elements?.map((element, idx) => {
-        roughContext.draw(element);
+      elements?.map(({ path }, idx) => {
+        roughContext.draw(path);
       });
     }
-  }, [elements, currElement]);
+  }, [elements, drawing]);
 
-  const mouseMove = (e) => {
-    let { buttons, clientX: positionX, clientY: positionY } = e;
+  const getAttributes = (e) => {
+    let { clientX: positionX, clientY: positionY } = e;
     let { top, left } = canvas.getBoundingClientRect();
     let attributes = {
       selectedMenu,
@@ -51,24 +49,38 @@ const Whiteboard = ({ socket }) => {
       size,
       newPosX: positionX - left,
       newPosY: positionY - top,
-      currPosX: currPos.x - left,
-      currPosY: currPos.y - top,
-      startPosX: startPos.x === null ? positionX - left : startPos.x,
-      startPosY: startPos.y === null ? positionY - top : startPos.y,
-      currElement,
+      currPosX: positionX - left,
+      currPosY: positionY - top,
     };
-    setCurrPos({ x: e.clientX, y: e.clientY });
-    if (selectedMenu !== null && buttons === 1) {
-      startPos.x === null &&
-        setStartPos({ x: positionX - left, y: positionY - top });
-      currElement = createElement(attributes, context, generator, roughContext);
-      setCurrElement(currElement);
+    return attributes;
+  };
+  const handleMouseMove = (e) => {
+    if (!drawing) return;
+
+    let attributes = getAttributes(e);
+
+    if (selectedMenu !== null) {
+      const index = elements.length - 1;
+      const currElement = elements[index];
+      let { attributes: prevAttribute } = currElement;
+      attributes.currPosX = prevAttribute.currPosX;
+      attributes.currPosY = prevAttribute.currPosY;
+      let element = createElement(attributes, generator);
+      let elementsCopy = [...elements];
+      elementsCopy[index] = element;
+      setElements(elementsCopy);
     }
-    if (selectedMenu !== null && currElement !== null && buttons === 0) {
-      setElements((prev) => [...prev, currElement]);
-      setCurrElement(null);
-      setStartPos({ x: null, y: null });
+  };
+  const handleMouseDown = (event) => {
+    setDrawing(true);
+    let attributes = getAttributes(event);
+    if (selectedMenu !== null) {
+      let element = createElement(attributes, generator);
+      setElements((prev) => [...prev, element]);
     }
+  };
+  const handleMouseUp = (event) => {
+    setDrawing(false);
   };
   return (
     <div className="flex flex-col">
@@ -76,7 +88,13 @@ const Whiteboard = ({ socket }) => {
         <WhiteBoardMenuDisplay Menu={WhiteboardOptionsConstants} />
       </div>
       <div className="w-full h-full">
-        <Canvas mouseMove={mouseMove} canvas={canvas} setCanvas={setCanvas} />
+        <Canvas
+          hanldeMouseMove={handleMouseMove}
+          handleMouseDown={handleMouseDown}
+          hanldeMouseUp={handleMouseUp}
+          canvas={canvas}
+          setCanvas={setCanvas}
+        />
       </div>
     </div>
   );

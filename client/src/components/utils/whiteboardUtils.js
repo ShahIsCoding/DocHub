@@ -1,41 +1,32 @@
 import { WhiteboardMenuConstants } from "../constants/WhiteboardOptions";
 
-const Drawing = (ctx, rctx, generator, attributes, isLine) => {
-  if (ctx === null) return;
+const Drawing = (generator, attributes, isLine) => {
   if (isLine === true) {
     let path = generator.line(
-      attributes.startPosX,
-      attributes.startPosY,
+      attributes.currPosX,
+      attributes.currPosY,
       attributes.newPosX,
       attributes.newPosY,
       {
-        roughness: 0.9,
+        roughness: 0.3,
         stroke: attributes.color,
       }
     );
-    rctx.draw(path);
-    return path;
+    console.log(attributes, path);
+    return { attributes, path };
   }
-  let prevpath;
-  let path = generator.linearPath(
-    [
-      [attributes.currPosX, attributes.currPosY],
-      [attributes.newPosX, attributes.newPosY],
-    ],
+  let previousPath = [];
+  if (attributes?.prevpath?.length > 0) previousPath = attributes.prevpath;
+  previousPath = [...previousPath, [attributes.currPosX, attributes.currPosY], [attributes.newPosX, attributes.newPosY]];
+  console.log(previousPath);
+  let path = generator.linearPath(previousPath,
     {
       stroke: attributes.color,
       roughness: 0.4,
     }
   );
-  // rctx.draw(path);
-  // console.log("sending", path, attributes.currElement);
-  if (attributes.currElement !== null) {
-    prevpath = attributes.currElement;
-    prevpath.sets[0].ops.push(...path.sets[0].ops);
-  }
-  let finalPath = attributes.currElement !== null ? prevpath : path;
-  rctx.draw(finalPath);
-  return finalPath;
+  attributes.prevpath = previousPath;
+  return { attributes, path };
 };
 const Erasing = (e, context, attributes, isRecieved) => {
   const { PEN, ERASE } = WhiteboardMenuConstants;
@@ -50,45 +41,43 @@ const Erasing = (e, context, attributes, isRecieved) => {
   }
 };
 
-function QuadCurve(ctx, rctx, generator, attributes) {
+function QuadCurve(generator, attributes) {
   let {
     currPosX,
     currPosY,
     newPosX,
     newPosY,
-    startPosX,
-    startPosY,
     isSquare,
     color,
   } = attributes;
-  let width = newPosX - startPosX;
-  let height = newPosY - startPosY;
+
+  let width = newPosX - currPosX;
+  let height = newPosY - currPosY;
   if (isSquare) {
     let modvalue = Math.min(Math.abs(width), Math.abs(height));
     width = modvalue * (width < 0 ? -1 : 1);
     height = modvalue * (height < 0 ? -1 : 1);
   }
 
-  let path = generator.rectangle(startPosX, startPosY, width, height, {
+  let path = generator.rectangle(currPosX, currPosY, width, height, {
     roughness: 0.2,
     stroke: attributes.color,
   });
-  rctx.draw(path);
-  return path;
+  return { attributes, path };
 }
 
-const createElement = (attributes, context, generator, roughContext) => {
+const createElement = (attributes, generator) => {
   let { selectedMenu } = attributes;
   const { PEN, ERASE, SQUARE, RECTANGLE, LINE } = WhiteboardMenuConstants;
   switch (selectedMenu) {
     case LINE:
-      return Drawing(context, roughContext, generator, attributes, true);
+      return Drawing(generator, attributes, true);
     case PEN:
-      return Drawing(context, roughContext, generator, attributes, false);
+      return Drawing(generator, attributes, false);
     case SQUARE:
       attributes.isSquare = true;
     case RECTANGLE:
-      return QuadCurve(context, roughContext, generator, attributes);
+      return QuadCurve(generator, attributes);
     default:
       break;
   }

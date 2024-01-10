@@ -1,9 +1,13 @@
 import React, { useEffect, useRef } from "react";
 
-const Canvas = (props) => {
+const Canvas = ({
+  hanldeMouseMove,
+  hanldeMouseUp,
+  handleMouseDown,
+  setCanvas,
+}) => {
   const canvasRef = useRef(null);
 
-  let { mouseMove, setCanvas } = props;
   useEffect(() => {
     const canvas = canvasRef.current;
     setCanvas(canvas);
@@ -13,7 +17,9 @@ const Canvas = (props) => {
     <canvas
       width={window.innerWidth}
       height={window.innerHeight}
-      onMouseMove={mouseMove}
+      onMouseUp={hanldeMouseUp}
+      onMouseDown={handleMouseDown}
+      onMouseMove={hanldeMouseMove}
       ref={canvasRef}
     ></canvas>
   );
