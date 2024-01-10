@@ -1,7 +1,6 @@
 import { WhiteboardMenuConstants } from "../constants/WhiteboardOptions";
 
 const Drawing = (ctx, rctx, generator, attributes, isLine) => {
-  //   const dispatch = useDispatch();
   if (ctx === null) return;
   if (isLine === true) {
     let path = generator.line(
