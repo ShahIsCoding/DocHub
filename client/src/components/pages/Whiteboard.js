@@ -5,7 +5,7 @@ import { WhiteboardOptionsConstants } from "../constants/WhiteboardOptions";
 import WhiteBoardMenuDisplay from "../component/WhiteBoardMenuDisplay";
 import { useParams } from "react-router-dom";
 import rough from "roughjs";
-import { createElement } from "../utils/whiteboardUtils";
+import { configureElement } from "../utils/whiteboardUtils";
 
 const Whiteboard = ({ socket }) => {
   const menu = useSelector((state) => state.menu);
@@ -21,6 +21,7 @@ const Whiteboard = ({ socket }) => {
   // created paths
   const [elements, setElements] = useState([]);
   const [drawing, setDrawing] = useState(false);
+  const [selectedElementId, setSelectElementId] = useState(null);
 
   useEffect(() => {
     if (canvas === null) return;
@@ -47,10 +48,10 @@ const Whiteboard = ({ socket }) => {
       selectedMenu,
       color,
       size,
-      newPosX: positionX - left,
-      newPosY: positionY - top,
-      currPosX: positionX - left,
-      currPosY: positionY - top,
+      currX: positionX - left,
+      currY: positionY - top,
+      prevX: positionX - left,
+      prevY: positionY - top,
     };
     return attributes;
   };
@@ -60,23 +61,38 @@ const Whiteboard = ({ socket }) => {
     let attributes = getAttributes(e);
 
     if (selectedMenu !== null) {
-      const index = elements.length - 1;
-      const currElement = elements[index];
-      let { attributes: prevAttribute } = currElement;
-      attributes.currPosX = prevAttribute.currPosX;
-      attributes.currPosY = prevAttribute.currPosY;
-      let element = createElement(attributes, generator);
-      let elementsCopy = [...elements];
-      elementsCopy[index] = element;
-      setElements(elementsCopy);
+      if (selectedMenu === MENU) {
+        let prevElement = elements[selectedElementId];
+        let updateElement = updateElement(prevElement, attributes, generator);
+        let elementsCopy = elements;
+        elementsCopy[selectedElementId] = { ...elementsCopy[selectedElementId], path: updateElement, attributes };
+        setElements(elementsCopy);
+      }
+      else {
+        const index = elements.length - 1;
+        const currElement = elements[index];
+        let { attributes: prevAttribute } = currElement;
+        attributes.prevX = prevAttribute.prevX;
+        attributes.prevY = prevAttribute.prevY;
+        let element = configureElement(, attributes, generator);
+        let elementsCopy = [...elements];
+        elementsCopy[index] = element;
+        setElements(elementsCopy);
+      }
     }
   };
   const handleMouseDown = (event) => {
     setDrawing(true);
     let attributes = getAttributes(event);
     if (selectedMenu !== null) {
-      let element = createElement(attributes, generator);
-      setElements((prev) => [...prev, element]);
+      if (selectedMenu === MOVE) {
+        setSelectElementId(getSelectedELementId({ x: event.clientX, y: event.clientY }, elements);
+      }
+      else {
+        let id = elements.length;
+        let element = configureElement(id, attributes, generator);
+        setElements((prev) => [...prev, element]);
+      }
     }
   };
   const handleMouseUp = (event) => {

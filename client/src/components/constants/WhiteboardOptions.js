@@ -3,6 +3,8 @@ import { BsFillEraserFill } from "react-icons/bs";
 import { PiLineSegment, PiRectangleDuotone } from "react-icons/pi";
 import { GiSquare } from "react-icons/gi";
 import { PiCircleDuotone } from "react-icons/pi";
+import { IoMoveOutline } from "react-icons/io5";
+
 export const WhiteboardMenuConstants = {
   BASIC: "BASIC",
   PEN: "PEN",
@@ -14,6 +16,7 @@ export const WhiteboardMenuConstants = {
   SQUARE: "SQUARE",
   CIRCLE: "CIRCLE",
   LINE: "LINE",
+  MOVE: "MOVE"
 };
 export const WhiteboardOptionsConstants = [
   {
@@ -42,7 +45,12 @@ export const WhiteboardOptionsConstants = [
         Name: WhiteboardMenuConstants.ERASE,
         icon: <BsFillEraserFill />,
         child: false,
-      },
+      }, {
+        key: 1.4,
+        Name: WhiteboardMenuConstants.MOVE,
+        icon: <IoMoveOutline />,
+        child: false
+      }
     ],
   },
 
@@ -68,7 +76,8 @@ export const WhiteboardOptionsConstants = [
         Name: WhiteboardMenuConstants.SQUARE,
         icon: <GiSquare />,
         child: false,
-      },
+      }
+      ,
       // {
       //   key: 2.3,
       //   Name: WhiteboardMenuConstants.CIRCLE,
