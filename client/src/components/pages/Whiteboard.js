@@ -65,16 +65,19 @@ const Whiteboard = ({ socket }) => {
         let prevElement = elements[selectedElementId];
         let updateElement = updateElement(prevElement, attributes, generator);
         let elementsCopy = elements;
-        elementsCopy[selectedElementId] = { ...elementsCopy[selectedElementId], path: updateElement, attributes };
+        elementsCopy[selectedElementId] = {
+          ...elementsCopy[selectedElementId],
+          path: updateElement,
+          attributes,
+        };
         setElements(elementsCopy);
-      }
-      else {
+      } else {
         const index = elements.length - 1;
         const currElement = elements[index];
         let { attributes: prevAttribute } = currElement;
         attributes.prevX = prevAttribute.prevX;
         attributes.prevY = prevAttribute.prevY;
-        let element = configureElement(, attributes, generator);
+        let element = configureElement(index, attributes, generator);
         let elementsCopy = [...elements];
         elementsCopy[index] = element;
         setElements(elementsCopy);
@@ -86,9 +89,10 @@ const Whiteboard = ({ socket }) => {
     let attributes = getAttributes(event);
     if (selectedMenu !== null) {
       if (selectedMenu === MOVE) {
-        setSelectElementId(getSelectedELementId({ x: event.clientX, y: event.clientY }, elements);
-      }
-      else {
+        setSelectElementId(
+          getSelectedELementId({ x: event.clientX, y: event.clientY }, elements)
+        );
+      } else {
         let id = elements.length;
         let element = configureElement(id, attributes, generator);
         setElements((prev) => [...prev, element]);
