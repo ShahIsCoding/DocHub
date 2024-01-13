@@ -41,7 +41,6 @@ const Whiteboard = ({ socket }) => {
     if (!context) return;
     if (elements !== undefined && elements.length > 0) {
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-
       elements?.map(({ path }, idx) => {
         roughContext.draw(path);
       });
@@ -52,7 +51,6 @@ const Whiteboard = ({ socket }) => {
     let { clientX: positionX, clientY: positionY } = e;
     let { top, left } = canvas.getBoundingClientRect();
     let attributes = {
-      selectedMenu,
       color,
       size,
       currX: positionX - left,
@@ -64,53 +62,46 @@ const Whiteboard = ({ socket }) => {
   };
   const handleMouseMove = (e) => {
     if (!drawing) return;
-
     let attributes = getAttributes(e);
-
     if (selectedMenu !== null) {
+      let index = elements.length - 1;
       if (selectedMenu === WhiteboardMenuConstants.MOVE) {
-        // let prevElement = elements[selectedElementId];
-        // console.log(prevElement);
-        // let updatedElement = updateElement(prevElement, attributes, generator);
-        // let elementsCopy = elements;
-        // elementsCopy[selectedElementId] = {
-        //   ...elementsCopy[selectedElementId],
-        //   path: updatedElement,
-        //   attributes,
-        // };
-        // setElements(elementsCopy);
-      } else {
-        const index = elements.length - 1;
-        const currElement = elements[index];
-        let { attributes: prevAttribute } = currElement;
-        attributes.prevX = prevAttribute.prevX;
-        attributes.prevY = prevAttribute.prevY;
-        let element = configureElement(index, attributes, generator);
-        let elementsCopy = [...elements];
-        elementsCopy[index] = element;
-        setElements(elementsCopy);
+        index = selectedElementId;
       }
+      let prevElement = elements[index];
+      let updatedElement = updateElement(
+        prevElement,
+        attributes,
+        generator,
+        selectedMenu
+      );
+      let elementsCopy = [...elements];
+      elementsCopy[index] = updatedElement;
+      setElements(elementsCopy);
     }
   };
+
   const handleMouseDown = (event) => {
     setDrawing(true);
     let attributes = getAttributes(event);
     if (selectedMenu !== null) {
       if (selectedMenu === WhiteboardMenuConstants.MOVE) {
+        let { top, left } = canvas.getBoundingClientRect();
         let id = getSelectedELementId(
-          { x: event.clientX, y: event.clientY },
+          { x: event.clientX - left, y: event.clientY - top },
           elements
         );
         setSelectElementId(id);
       } else {
         let id = elements.length;
-        let element = configureElement(id, attributes, generator);
+        let element = configureElement(id, attributes, generator, selectedMenu);
         setElements((prev) => [...prev, element]);
       }
     }
   };
   const handleMouseUp = (event) => {
     setDrawing(false);
+    setSelectElementId(null);
   };
   return (
     <div className="flex flex-col">

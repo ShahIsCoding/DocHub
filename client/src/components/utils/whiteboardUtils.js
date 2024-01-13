@@ -1,95 +1,102 @@
 import { WhiteboardMenuConstants } from "../constants/WhiteboardOptions";
 
-const Drawing = (id, generator, attributes, isLine) => {
-  let { selectedMenu } = attributes;
-  if (isLine === true) {
+const Drawing = (id, generator, attributes, type) => {
+  const { LINE } = WhiteboardMenuConstants;
+  if (type === LINE) {
     let path = generator.line(
-      attributes.currPosX,
-      attributes.currPosY,
-      attributes.newPosX,
-      attributes.newPosY,
+      attributes.prevX,
+      attributes.prevY,
+      attributes.currX,
+      attributes.currY,
       {
-        roughness: 0.3,
+        roughness: 1,
         stroke: attributes.color,
       }
     );
-    console.log(attributes, path);
-    return { id, attributes, path, type: selectedMenu };
+    return { id, attributes, path, type };
   }
   let previousPath = [];
-  if (attributes?.prevpath?.length > 0) previousPath = attributes.prevpath;
-  previousPath = [
-    ...previousPath,
-    [attributes.prevX, attributes.prevY],
-    [attributes.currX, attributes.currY],
-  ];
-  console.log(previousPath);
-  let path = generator.linearPath(previousPath, {
+  if (attributes?.prevpath?.length > 0)
+    previousPath.push(...attributes.prevpath);
+  previousPath.push([attributes.prevX, attributes.prevY]);
+  previousPath.push([attributes.currX, attributes.currY]);
+  console.log({ ...previousPath });
+  let path = generator.linearPath([...previousPath], {
     stroke: attributes.color,
-    roughness: 0.4,
+    roughness: 0.8,
   });
   attributes.prevpath = previousPath;
-  return { id, attributes, path, type: selectedMenu };
+  console.log("new", { ...previousPath });
+  return { id, attributes, path, type };
 };
-const Erasing = (e, context, attributes, isRecieved) => {
-  const { PEN, ERASE } = WhiteboardMenuConstants;
-  if (context === null) return;
-  if (attributes.selectedMenu === ERASE) {
-    context.clearRect(
-      attributes.currPosX,
-      attributes.currPosY,
-      attributes.size * 10,
-      attributes.size * 10
-    );
-  }
-};
+// const Erasing = (e, context, attributes, isRecieved) => {
+//   const { PEN, ERASE } = WhiteboardMenuConstants;
+//   if (context === null) return;
+//   if (attributes.selectedMenu === ERASE) {
+//     context.clearRect(
+//       attributes.currPosX,
+//       attributes.currPosY,
+//       attributes.size * 10,
+//       attributes.size * 10
+//     );
+//   }
+// };
 
-function QuadCurve(id, generator, attributes) {
-  let { currX, currY, prevX, prevY, isSquare, color, selectedMenu } =
-    attributes;
-
+function QuadCurve(id, generator, attributes, type) {
+  let { currX, currY, prevX, prevY, color } = attributes;
+  const { SQUARE } = WhiteboardMenuConstants;
   let width = currX - prevX;
   let height = currY - prevY;
-  if (isSquare) {
+  if (type === SQUARE) {
     let modvalue = Math.min(Math.abs(width), Math.abs(height));
     width = modvalue * (width < 0 ? -1 : 1);
     height = modvalue * (height < 0 ? -1 : 1);
   }
 
   let path = generator.rectangle(prevX, prevY, width, height, {
-    roughness: 0.2,
-    stroke: attributes.color,
+    roughness: 0.9,
+    stroke: color,
+    fill: color,
   });
-  return { id, attributes, path, type: selectedMenu };
+  return { id, attributes, path, type };
 }
-const updateElement = (element, attributes, generator) => {
-  const { PEN, ERASE, SQUARE, RECTANGLE, LINE, MOVE } = WhiteboardMenuConstants;
+const updateElement = (element, currAttributes, generator, selectedMenu) => {
+  const { PEN, SQUARE, RECTANGLE, LINE, MOVE } = WhiteboardMenuConstants;
   let { id, type, attributes: prevAttributes } = element;
-  let offsetX = attributes.currX - attributes.prevX;
-  let offsetY = attributes.currY - attributes.currY;
 
-  if (type === PEN || type === LINE) {
-  } else if (type === SQUARE || type === RECTANGLE) {
-    attributes.prevX = prevAttributes.prevX + offsetX;
-    attributes.prevY = prevAttributes.prevY + offsetY;
-    attributes.currX = prevAttributes.currX + offsetX;
-    attributes.currY = prevAttributes.currY + offsetY;
+  if (selectedMenu === MOVE) {
+    let offsetX = currAttributes.currX - prevAttributes.prevX;
+    let offsetY = currAttributes.currY - prevAttributes.prevY;
+
+    if (type === PEN || type === LINE) {
+    } else if (type === SQUARE || type === RECTANGLE) {
+      currAttributes.prevX = prevAttributes.prevX + offsetX;
+      currAttributes.prevY = prevAttributes.prevY + offsetY;
+      currAttributes.currX = prevAttributes.currX + offsetX;
+      currAttributes.currY = prevAttributes.currY + offsetY;
+    }
+  } else {
+    if (selectedMenu === PEN) {
+      currAttributes.prevX = prevAttributes.currX;
+      currAttributes.prevY = prevAttributes.currY;
+    } else {
+      currAttributes.prevX = prevAttributes.prevX;
+      currAttributes.prevY = prevAttributes.prevY;
+    }
   }
-  let updatedElement = configureElement(id, attributes, generator);
+  let updatedElement = configureElement(id, currAttributes, generator, type);
   return updatedElement;
 };
-const configureElement = (id, attributes, generator) => {
-  let { selectedMenu } = attributes;
-  const { PEN, ERASE, SQUARE, RECTANGLE, LINE, MOVE } = WhiteboardMenuConstants;
-  switch (selectedMenu) {
+const configureElement = (id, attributes, generator, type) => {
+  const { PEN, SQUARE, RECTANGLE, LINE } = WhiteboardMenuConstants;
+  switch (type) {
     case LINE:
-      return Drawing(id, generator, attributes, true);
+      return Drawing(id, generator, attributes, type);
     case PEN:
-      return Drawing(id, generator, attributes, false);
+      return Drawing(id, generator, attributes, type);
     case SQUARE:
-      attributes.isSquare = true;
     case RECTANGLE:
-      return QuadCurve(id, generator, attributes);
+      return QuadCurve(id, generator, attributes, type);
     default:
       break;
   }
@@ -114,21 +121,19 @@ function isOnLine(x, y, currX, currY, prevX, prevY, maxDistance = 1) {
 }
 const getSelectedELementId = (pos, elements) => {
   let { x, y } = pos;
-  const { PEN, ERASE, SQUARE, RECTANGLE, LINE, MOVE } = WhiteboardMenuConstants;
-  elements.map(({ type, attributes, id }, idx) => {
+  const { SQUARE, RECTANGLE } = WhiteboardMenuConstants;
+  let filteredElements = elements.filter(({ type, attributes, id }, idx) => {
     let { currX, currY, prevX, prevY } = attributes;
     switch (type) {
       case SQUARE:
       case RECTANGLE:
-        if (isInQuad(x, y, currX, currY, prevX, prevY)) {
-          return id;
-        }
-        break;
+        return isInQuad(x, y, currX, currY, prevX, prevY);
       default:
-        if (isOnLine(x, y, currX, currY, prevX, prevY)) {
-          return id;
-        }
+        return isOnLine(x, y, currX, currY, prevX, prevY);
     }
   });
+  if (filteredElements.length > 0) {
+    return filteredElements[filteredElements.length - 1].id;
+  } else return null;
 };
 export { configureElement, getSelectedELementId, updateElement };
