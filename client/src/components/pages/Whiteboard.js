@@ -1,11 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import Canvas from "../component/Canvas";
-import { WhiteboardOptionsConstants } from "../constants/WhiteboardOptions";
+import {
+  WhiteboardMenuConstants,
+  WhiteboardOptionsConstants,
+} from "../constants/WhiteboardOptions";
 import WhiteBoardMenuDisplay from "../component/WhiteBoardMenuDisplay";
 import { useParams } from "react-router-dom";
 import rough from "roughjs";
-import { configureElement } from "../utils/whiteboardUtils";
+import {
+  configureElement,
+  getSelectedELementId,
+  updateElement,
+} from "../utils/whiteboardUtils";
 
 const Whiteboard = ({ socket }) => {
   const menu = useSelector((state) => state.menu);
@@ -61,16 +68,17 @@ const Whiteboard = ({ socket }) => {
     let attributes = getAttributes(e);
 
     if (selectedMenu !== null) {
-      if (selectedMenu === MENU) {
-        let prevElement = elements[selectedElementId];
-        let updateElement = updateElement(prevElement, attributes, generator);
-        let elementsCopy = elements;
-        elementsCopy[selectedElementId] = {
-          ...elementsCopy[selectedElementId],
-          path: updateElement,
-          attributes,
-        };
-        setElements(elementsCopy);
+      if (selectedMenu === WhiteboardMenuConstants.MOVE) {
+        // let prevElement = elements[selectedElementId];
+        // console.log(prevElement);
+        // let updatedElement = updateElement(prevElement, attributes, generator);
+        // let elementsCopy = elements;
+        // elementsCopy[selectedElementId] = {
+        //   ...elementsCopy[selectedElementId],
+        //   path: updatedElement,
+        //   attributes,
+        // };
+        // setElements(elementsCopy);
       } else {
         const index = elements.length - 1;
         const currElement = elements[index];
@@ -88,10 +96,12 @@ const Whiteboard = ({ socket }) => {
     setDrawing(true);
     let attributes = getAttributes(event);
     if (selectedMenu !== null) {
-      if (selectedMenu === MOVE) {
-        setSelectElementId(
-          getSelectedELementId({ x: event.clientX, y: event.clientY }, elements)
+      if (selectedMenu === WhiteboardMenuConstants.MOVE) {
+        let id = getSelectedELementId(
+          { x: event.clientX, y: event.clientY },
+          elements
         );
+        setSelectElementId(id);
       } else {
         let id = elements.length;
         let element = configureElement(id, attributes, generator);
