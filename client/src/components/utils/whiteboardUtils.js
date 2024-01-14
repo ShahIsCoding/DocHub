@@ -21,7 +21,7 @@ const Drawing = (id, generator, attributes, type) => {
   previousPath.push([attributes.prevX, attributes.prevY]);
   previousPath.push([attributes.currX, attributes.currY]);
   console.log({ ...previousPath });
-  let path = generator.linearPath([...previousPath], {
+  let path = generator.polygon(previousPath, {
     stroke: attributes.color,
     roughness: 0.8,
   });

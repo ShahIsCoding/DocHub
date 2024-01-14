@@ -15,6 +15,7 @@ const Canvas = ({
 
   return (
     <canvas
+      style={{ background: "black" }}
       width={window.innerWidth}
       height={window.innerHeight}
       onMouseUp={hanldeMouseUp}
