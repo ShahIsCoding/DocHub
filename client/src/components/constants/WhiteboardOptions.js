@@ -16,7 +16,8 @@ export const WhiteboardMenuConstants = {
   SQUARE: "SQUARE",
   CIRCLE: "CIRCLE",
   LINE: "LINE",
-  MOVE: "MOVE"
+  MOVE: "MOVE",
+  TOOLS: "TOOLS",
 };
 export const WhiteboardOptionsConstants = [
   {
@@ -24,12 +25,6 @@ export const WhiteboardOptionsConstants = [
     Name: WhiteboardMenuConstants.BASIC,
     child: true,
     childOptions: [
-      {
-        key: 1.0,
-        Name: WhiteboardMenuConstants.PEN,
-        icon: <FaPen />,
-        child: false,
-      },
       {
         key: 1.1,
         Name: WhiteboardMenuConstants.COLOR,
@@ -40,25 +35,38 @@ export const WhiteboardOptionsConstants = [
         Name: WhiteboardMenuConstants.SIZE,
         child: false,
       },
+      ,
+    ],
+  },
+  {
+    Name: WhiteboardMenuConstants.TOOLS,
+    child: true,
+    childOptions: [
       {
         key: 1.3,
         Name: WhiteboardMenuConstants.ERASE,
         icon: <BsFillEraserFill />,
         child: false,
-      }, {
+      },
+      {
         key: 1.4,
         Name: WhiteboardMenuConstants.MOVE,
         icon: <IoMoveOutline />,
-        child: false
-      }
+        child: false,
+      },
     ],
   },
-
   {
     key: 2,
     Name: WhiteboardMenuConstants.SHAPES,
     child: true,
     childOptions: [
+      {
+        key: 1.0,
+        Name: WhiteboardMenuConstants.PEN,
+        icon: <FaPen />,
+        child: false,
+      },
       {
         key: 2.0,
         Name: WhiteboardMenuConstants.LINE,
@@ -76,8 +84,7 @@ export const WhiteboardOptionsConstants = [
         Name: WhiteboardMenuConstants.SQUARE,
         icon: <GiSquare />,
         child: false,
-      }
-      ,
+      },
       // {
       //   key: 2.3,
       //   Name: WhiteboardMenuConstants.CIRCLE,

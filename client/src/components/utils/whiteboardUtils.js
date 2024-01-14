@@ -29,18 +29,23 @@ const Drawing = (id, generator, attributes, type) => {
   console.log("new", { ...previousPath });
   return { id, attributes, path, type };
 };
-// const Erasing = (e, context, attributes, isRecieved) => {
-//   const { PEN, ERASE } = WhiteboardMenuConstants;
-//   if (context === null) return;
-//   if (attributes.selectedMenu === ERASE) {
-//     context.clearRect(
-//       attributes.currPosX,
-//       attributes.currPosY,
-//       attributes.size * 10,
-//       attributes.size * 10
-//     );
-//   }
-// };
+const Arc = (id, generator, attributes, type) => {
+  let { currX, currY, prevX, prevY, color } = attributes;
+  let path = generator.arc(
+    prevX,
+    prevY,
+    200,
+    200,
+    0,
+    getRadian(prevX, prevY, currX, currY),
+    true,
+    {
+      stroke: color,
+      roughness: 0.8,
+    }
+  );
+  return { id, attributes, path, type };
+};
 
 function QuadCurve(id, generator, attributes, type) {
   let { currX, currY, prevX, prevY, color } = attributes;
@@ -61,12 +66,15 @@ function QuadCurve(id, generator, attributes, type) {
   return { id, attributes, path, type };
 }
 const updateElement = (element, currAttributes, generator, selectedMenu) => {
-  const { PEN, SQUARE, RECTANGLE, LINE, MOVE } = WhiteboardMenuConstants;
+  const { PEN, SQUARE, RECTANGLE, LINE, MOVE, CIRCLE } =
+    WhiteboardMenuConstants;
   let { id, type, attributes: prevAttributes } = element;
 
   if (selectedMenu === MOVE) {
     let offsetX = currAttributes.currX - prevAttributes.prevX;
     let offsetY = currAttributes.currY - prevAttributes.prevY;
+    currAttributes.color = prevAttributes.color;
+    currAttributes.size = prevAttributes.size;
 
     if (type === PEN || type === LINE) {
     } else if (type === SQUARE || type === RECTANGLE) {
@@ -88,7 +96,7 @@ const updateElement = (element, currAttributes, generator, selectedMenu) => {
   return updatedElement;
 };
 const configureElement = (id, attributes, generator, type) => {
-  const { PEN, SQUARE, RECTANGLE, LINE } = WhiteboardMenuConstants;
+  const { PEN, SQUARE, RECTANGLE, LINE, CIRCLE } = WhiteboardMenuConstants;
   switch (type) {
     case LINE:
       return Drawing(id, generator, attributes, type);
@@ -97,6 +105,8 @@ const configureElement = (id, attributes, generator, type) => {
     case SQUARE:
     case RECTANGLE:
       return QuadCurve(id, generator, attributes, type);
+    case CIRCLE:
+      return Arc(id, generator, attributes, type);
     default:
       break;
   }
@@ -119,6 +129,11 @@ function isOnLine(x, y, currX, currY, prevX, prevY, maxDistance = 1) {
   const offset = distance(a, b) - (distance(a, c) + distance(b, c));
   return Math.abs(offset) < maxDistance ? true : false;
 }
+const getRadian = (x1, y1, x2, y2) => {
+  let rad = Math.atan2(y2 - y1, x2 - x1);
+  console.log(rad);
+  return rad;
+};
 const getSelectedELementId = (pos, elements) => {
   let { x, y } = pos;
   const { SQUARE, RECTANGLE } = WhiteboardMenuConstants;
