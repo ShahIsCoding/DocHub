@@ -2,32 +2,29 @@ import { WhiteboardMenuConstants } from "../constants/WhiteboardOptions";
 
 const Drawing = (id, generator, attributes, type) => {
   const { LINE } = WhiteboardMenuConstants;
+  let { currX, currY, prevX, prevY, previousPath, color } = attributes;
   if (type === LINE) {
-    let path = generator.line(
-      attributes.prevX,
-      attributes.prevY,
-      attributes.currX,
-      attributes.currY,
-      {
-        roughness: 1,
-        stroke: attributes.color,
-      }
-    );
+    let path = generator.line(prevX, prevY, currX, currY, {
+      roughness: 1,
+      stroke: attributes.color,
+    });
     return { id, attributes, path, type };
   }
-  let previousPath = [];
-  if (attributes?.prevpath?.length > 0)
-    previousPath.push(...attributes.prevpath);
-  previousPath.push([attributes.prevX, attributes.prevY]);
-  previousPath.push([attributes.currX, attributes.currY]);
-  console.log({ ...previousPath });
-  let path = generator.polygon(previousPath, {
-    stroke: attributes.color,
+  let currentPath = [];
+  if (previousPath !== undefined) {
+    currentPath = [...previousPath, [prevX, prevY], [currX, currY]];
+  } else
+    currentPath = [
+      [prevX, prevY],
+      [currX, currY],
+    ];
+  let path = generator.polygon([...currentPath], {
+    stroke: color,
     roughness: 0.8,
   });
-  attributes.prevpath = previousPath;
-  console.log("new", { ...previousPath });
-  return { id, attributes, path, type };
+  const updatedAttributes = { ...attributes, previousPath: currentPath };
+
+  return { id, attributes: updatedAttributes, path, type };
 };
 const Arc = (id, generator, attributes, type) => {
   let { currX, currY, prevX, prevY, color } = attributes;
@@ -61,7 +58,6 @@ function QuadCurve(id, generator, attributes, type) {
   let path = generator.rectangle(prevX, prevY, width, height, {
     roughness: 0.9,
     stroke: color,
-    fill: color,
   });
   return { id, attributes, path, type };
 }
