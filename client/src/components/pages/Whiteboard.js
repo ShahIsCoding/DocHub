@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import Canvas from "../component/Canvas";
 import {
@@ -39,15 +39,47 @@ const Whiteboard = ({ socket }) => {
 
   useEffect(() => {
     if (!context) return;
-    console.log(elements);
     if (elements !== undefined && elements.length > 0) {
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      console.log(elements);
       elements?.map(({ path }, idx) => {
         roughContext.draw(path);
       });
     }
   }, [elements, drawing]);
 
+  useEffect(() => {
+    if (socket == null) return;
+    socket.once("load-document", (document) => {});
+    socket.emit("get-document", documentId);
+  }, [socket, documentId]);
+
+  const handleReceivedChanges = (socket) => {
+    socket.on("wb-receive-changes", (data) => {
+      let { process, element } = data;
+      setElements((prevElements) => {
+        let elementsCopy = [...prevElements];
+        let index = elementsCopy.findIndex(({ id }) => id === element.id);
+        if (index === -1) {
+          return [...prevElements, element];
+        } else {
+          elementsCopy[index] = element;
+          return elementsCopy;
+        }
+      });
+    });
+  };
+
+  useEffect(() => {
+    handleReceivedChanges(socket);
+  }, [socket]);
+  const sendChanges = (element, process) => {
+    let data = {
+      element,
+      process,
+    };
+    socket.emit("whiteboardChanges", data);
+  };
   const getAttributes = (e) => {
     let { clientX: positionX, clientY: positionY } = e;
     let { top, left } = canvas.getBoundingClientRect();
@@ -71,7 +103,6 @@ const Whiteboard = ({ socket }) => {
         elementsCopy = elementsCopy.filter(({ id }, idx) => {
           return id !== selectedElementId;
         });
-        console.log(elementsCopy);
         setElements(elementsCopy);
       } else {
         if (selectedMenu === WhiteboardMenuConstants.MOVE) {
@@ -86,6 +117,7 @@ const Whiteboard = ({ socket }) => {
         );
         let elementsCopy = [...elements];
         elementsCopy[index] = updatedElement;
+        sendChanges(updatedElement, "update");
         setElements(elementsCopy);
       }
     }
@@ -108,6 +140,7 @@ const Whiteboard = ({ socket }) => {
       } else {
         let id = elements.length;
         let element = configureElement(id, attributes, generator, selectedMenu);
+        sendChanges(element, "add");
         setElements((prev) => [...prev, element]);
       }
     }

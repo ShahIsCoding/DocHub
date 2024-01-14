@@ -13,6 +13,9 @@ io.on("connection", (socket) => {
       console.log(data);
       socket.broadcast.to(documentId).emit("receive-changes", data);
     });
+    socket.on("whiteboardChanges", (data) => {
+      socket.broadcast.to(documentId).emit("wb-receive-changes", data);
+    });
   });
   console.log("connected");
 });
