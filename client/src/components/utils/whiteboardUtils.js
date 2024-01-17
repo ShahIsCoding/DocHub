@@ -11,14 +11,21 @@ const Drawing = (id, generator, attributes, type) => {
     return { id, attributes, path, type };
   }
   let currentPath = [];
-  if (previousPath !== undefined) {
-    currentPath = [...previousPath, [prevX, prevY], [currX, currY]];
-  } else
-    currentPath = [
-      [prevX, prevY],
-      [currX, currY],
-    ];
-  let path = generator.polygon([...currentPath], {
+  previousPath?.forEach((item, indx) => {
+    console.log(item);
+    currentPath.push(item);
+  });
+  currentPath = [
+    ...currentPath,
+    [prevX, prevY],
+    [currX, currY],
+    {
+      stroke: attributes.color,
+      roughness: 0.8,
+    },
+  ];
+
+  let path = generator.linearPath([...currentPath], {
     stroke: color,
     roughness: 0.8,
   });
@@ -27,18 +34,21 @@ const Drawing = (id, generator, attributes, type) => {
   return { id, attributes: updatedAttributes, path, type };
 };
 const Arc = (id, generator, attributes, type) => {
-  let { currX, currY, prevX, prevY, color } = attributes;
+  let { currX, currY, prevX, prevY, color, size } = attributes;
+  let width = currX - prevX;
+  let height = currY - prevY;
+  let radius = Math.max(Math.abs(width) + 1, Math.abs(height) + 1);
+  console.log(prevX, prevY, radius, radius, 0, getRadian(width, height), true);
   let path = generator.arc(
     prevX,
     prevY,
-    200,
-    200,
+    radius,
+    radius,
     0,
-    getRadian(prevX, prevY, currX, currY),
+    getRadian(width, height),
     true,
     {
       stroke: color,
-      roughness: 0.8,
     }
   );
   return { id, attributes, path, type };
@@ -83,6 +93,7 @@ const updateElement = (element, currAttributes, generator, selectedMenu) => {
     if (selectedMenu === PEN) {
       currAttributes.prevX = prevAttributes.currX;
       currAttributes.prevY = prevAttributes.currY;
+      currAttributes.previousPath = prevAttributes.previousPath;
     } else {
       currAttributes.prevX = prevAttributes.prevX;
       currAttributes.prevY = prevAttributes.prevY;
@@ -125,9 +136,10 @@ function isOnLine(x, y, currX, currY, prevX, prevY, maxDistance = 1) {
   const offset = distance(a, b) - (distance(a, c) + distance(b, c));
   return Math.abs(offset) < maxDistance ? true : false;
 }
-const getRadian = (x1, y1, x2, y2) => {
-  let rad = Math.atan2(y2 - y1, x2 - x1);
-  console.log(rad);
+const getRadian = (width, height) => {
+  if (width === 0) return 1;
+  let rad = Math.atan2(height, width);
+  if (rad < 0) rad = Math.abs(rad) + Math.PI;
   return rad;
 };
 const getSelectedELementId = (pos, elements) => {
