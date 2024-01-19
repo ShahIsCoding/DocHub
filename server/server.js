@@ -1,35 +1,30 @@
 const express = require("express");
 const http = require("http");
-const socketIO = require("socket.io");
-
+require("dotenv").config();
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(3001, {
-  cors: {
-    origin: "*",
-  },
-});
-
+require("./socketIO");
 const userRouter = require("./router/user.router");
-io.on("connection", (socket) => {
-  socket.on("get-document", (documentId) => {
-    const data = "";
-    socket.join(documentId);
-    socket.emit("load-document", data);
-    socket.on("send-changes", (data) => {
-      console.log(data);
-      socket.broadcast.to(documentId).emit("receive-changes", data);
-    });
-    socket.on("whiteboardChanges", (data) => {
-      socket.broadcast.to(documentId).emit("wb-receive-changes", data);
-    });
-  });
-  console.log("connected");
-});
+const { default: mongoose } = require("mongoose");
 
 app.use(express.json());
 
 app.use("/user", userRouter);
+
+mongoose.connect(process.env.DB_URI);
+const db = mongoose.connection;
+
+db.on("connected", () => {
+  console.log(`Mongoose connected`);
+});
+
+db.on("error", (err) => {
+  console.error(`Mongoose connection error: ${err}`);
+});
+
+db.on("disconnected", () => {
+  console.log("Mongoose disconnected");
+});
 const PORT = process.env.PORT || 3002;
 
 server.listen(PORT, () => {
