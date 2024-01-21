@@ -46,6 +46,12 @@ const DocumentId = ({ socket }) => {
               className="my-auto mx-4 rounded bg-blue-300 py-2 px-5 cursor-pointer"
               onClick={hanldeSharing}
             >
+              Save
+            </div>
+            <div
+              className="my-auto mx-4 rounded bg-blue-300 py-2 px-5 cursor-pointer"
+              onClick={hanldeSharing}
+            >
               Share
             </div>
             <div className="my-auto mx-5 ml-auto cursor-pointer">

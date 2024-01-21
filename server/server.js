@@ -5,12 +5,17 @@ const app = express();
 const server = http.createServer(app);
 require("./socketIO");
 const cors = require("cors");
+
 const userRouter = require("./router/user.router");
+const documentRouter = require("./router/document.router");
+
 const { default: mongoose } = require("mongoose");
 
 app.use(express.json());
 app.use(cors());
 app.use("/user", userRouter);
+app.use("/document", documentRouter);
+
 app.get("/", (req, res) => {
   res.send("SERVER IS RUNNING");
 });

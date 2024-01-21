@@ -1,5 +1,5 @@
 const express = require("express");
-const userAuthModel = require("../model/user.auth");
+const userAuthModel = require("../model/userAuth.Schema");
 const CONSTANTS = require("../constants");
 const router = express.Router();
 const { v4: uuidv4 } = require("uuid");

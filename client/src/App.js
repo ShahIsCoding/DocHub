@@ -25,8 +25,6 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="login" />} />
-        <Route path="login" element={<Login />} />
         <Route
           path="document"
           element={token === null ? <Navigate to="/login" /> : <Outlet />}
@@ -34,6 +32,8 @@ function App() {
           <Route path="home" element={<Home />} />
           <Route path="doc/:id" element={<DocumentId socket={socket} />} />
         </Route>
+        <Route path="/" element={<Navigate to="login" />} />
+        <Route path="login" element={<Login />} />
       </Routes>
     </Router>
   );
