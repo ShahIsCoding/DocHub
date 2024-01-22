@@ -44,7 +44,7 @@ const DocumentId = ({ socket }) => {
           <div className="flex flex-row float-right">
             <div
               className="my-auto mx-4 rounded bg-blue-300 py-2 px-5 cursor-pointer"
-              onClick={hanldeSharing}
+              onClick={hanldeSaving}
             >
               Save
             </div>

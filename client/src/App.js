@@ -27,7 +27,7 @@ function App() {
       <Routes>
         <Route
           path="document"
-          element={token === null ? <Navigate to="/login" /> : <Outlet />}
+          // element={token === null ? <Navigate to="/login" /> : <Outlet />}
         >
           <Route path="home" element={<Home />} />
           <Route path="doc/:id" element={<DocumentId socket={socket} />} />

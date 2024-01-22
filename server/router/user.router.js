@@ -1,25 +1,27 @@
 const express = require("express");
-const userAuthModel = require("../model/userAuth.Schema");
+const userModel = require("../model/user.Schema");
 const CONSTANTS = require("../constants");
 const router = express.Router();
 const { v4: uuidv4 } = require("uuid");
 const { getToken } = require("../utils/tokenUtils");
+
 router.post("/login", (req, res) => {
   let { username, password } = req.body;
-  userAuthModel.findOne({ username }).then((resp) => {
+  userModel.findOne({ username }).then((resp) => {
     if (resp.password === password) {
       let token = getToken(resp.id);
       res.status(201).cookie(token).send({
-        statusCode: 200,
+        statusCode: 201,
         message: "User Login",
         token: token,
       });
     }
   });
 });
+
 router.post("/register", (req, res) => {
   let { username, password } = req.body;
-  userAuthModel
+  userModel
     .findOne({ username: username })
     .then((user) => {
       if (!user) {
@@ -29,7 +31,7 @@ router.post("/register", (req, res) => {
           id: CONSTANTS.USER + ":" + uuidv4(),
         };
         let token = getToken(body.id);
-        userAuthModel
+        userModel
           .create(body)
           .then((resp) => {
             res.status(200).cookie(token).send({
