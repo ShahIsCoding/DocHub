@@ -3,9 +3,10 @@ const router = express.Router();
 const documentModel = require("../model/document.Schema");
 
 router
-  .route("/whiteboard")
+  .route("/document")
   .get("/getDocument", (req, res) => {
     let { users, elements } = req.body;
+    res.send("nive");
   })
   .post("/save", (req, res) => {})
   .post("/addUser", (req, res) => {

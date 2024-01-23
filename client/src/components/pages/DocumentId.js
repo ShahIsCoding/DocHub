@@ -8,11 +8,16 @@ import { handleDocument } from "../utils/documentUtils";
 const DocumentId = ({ socket }) => {
   const [documentName, setDocumentName] = useState("Untitled Document");
   const [isSharingModelOpen, setSharingModel] = useState(false);
+  const [isSaving, setSaving] = useState(false);
+
   const [type, setType] = useState(null);
   const { id: params } = useParams();
 
   function hanldeSharing() {
     setSharingModel((value) => !value);
+  }
+  function hanldeSaving() {
+    setSaving(true);
   }
   useEffect(() => {
     document.title = documentName;
@@ -64,7 +69,7 @@ const DocumentId = ({ socket }) => {
           </div>
         </div>
       </div>
-      {handleDocument(type, socket)}
+      {handleDocument(type, socket, isSaving, setSaving)}
       <SharingModel open={isSharingModelOpen} setOpen={setSharingModel} />
     </div>
   );

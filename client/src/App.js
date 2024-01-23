@@ -16,8 +16,6 @@ import { useSelector } from "react-redux";
 
 function App() {
   const [socket, setSocket] = useState();
-  const login = useSelector((state) => state.login);
-  const { token } = login;
   useEffect(() => {
     handleConnection(setSocket, io);
   }, []);
@@ -25,15 +23,21 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<Navigate to="login" />} />
+        <Route path="login" element={<Login />} />
         <Route
           path="document"
-          // element={token === null ? <Navigate to="/login" /> : <Outlet />}
+          // element={
+          //   localStorage.getItem("user-token") === null ? (
+          //     <Navigate to="/login" />
+          //   ) : (
+          //     <Outlet />
+          //   )
+          // }
         >
           <Route path="home" element={<Home />} />
           <Route path="doc/:id" element={<DocumentId socket={socket} />} />
         </Route>
-        <Route path="/" element={<Navigate to="login" />} />
-        <Route path="login" element={<Login />} />
       </Routes>
     </Router>
   );
