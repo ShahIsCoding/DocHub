@@ -14,6 +14,7 @@ const DocumentId = ({ socket }) => {
   function hanldeSharing() {
     setSharingModel((value) => !value);
   }
+  function hanldeSaving() {}
   useEffect(() => {
     document.title = documentName;
     if (params !== null) {

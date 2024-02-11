@@ -11,12 +11,12 @@ const documentUsers = new mongoose.Schema({
   data: {
     type: String,
   },
-  users: [
-    {
-      type: ObjectId,
-      ref: "user",
-    },
-  ],
+  // users: [
+  //   {
+  //     type: ObjectId,
+  //     ref: "user",
+  //   },
+  // ],
   lastUpdated: {
     type: Date,
     default: Date.now,
