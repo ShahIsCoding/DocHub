@@ -1,10 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
 import MenuReducer from "../reducers/MenuReducer";
-import LoginReducer from "../reducers/LoginReducer";
+import LoginReducer from "../reducers/userReducer";
 
 export const store = configureStore({
   reducer: {
-    login: LoginReducer,
+    user: LoginReducer,
     menu: MenuReducer,
   },
 });

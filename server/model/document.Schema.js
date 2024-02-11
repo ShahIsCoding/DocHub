@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 const documentUsers = new mongoose.Schema({
   id: {
     type: String,
@@ -21,6 +20,7 @@ const documentUsers = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+  { id: false, versionKey: false }
+);
 
 module.exports = mongoose.model("document", documentUsers);

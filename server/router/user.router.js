@@ -10,11 +10,18 @@ router.post("/login", (req, res) => {
   userModel.findOne({ username }).then((resp) => {
     if (resp.password === password) {
       let token = getToken(resp.id);
-      res.status(201).cookie(token).send({
-        statusCode: 201,
-        message: "User Login",
-        token: token,
-      });
+      res
+        .status(201)
+        .cookie(token)
+        .send({
+          statusCode: 201,
+          message: "User Login",
+          user: {
+            id: resp.id,
+            username: resp.username,
+            token: token,
+          },
+        });
     }
   });
 });
@@ -34,11 +41,18 @@ router.post("/register", (req, res) => {
         userModel
           .create(body)
           .then((resp) => {
-            res.status(200).cookie(token).send({
-              statusCode: 200,
-              message: "User Created",
-              token: token,
-            });
+            res
+              .status(200)
+              .cookie(token)
+              .send({
+                statusCode: 200,
+                message: "User Created",
+                user: {
+                  id: resp.id,
+                  username: resp.username,
+                  token: token,
+                },
+              });
           })
           .catch((err) => {
             res.status(400).send({ message: err.message });

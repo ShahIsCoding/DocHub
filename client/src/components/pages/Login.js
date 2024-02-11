@@ -2,20 +2,22 @@ import React, { useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 import Logo from "../component/Logo";
-import { api, userApi } from "../service/api";
-import { setToken } from "../redux/reducers/LoginReducer";
+
+import { setUserInfo } from "../redux/reducers/userReducer";
 import { checkUserValidation } from "../utils/Validation";
 import { useDispatch } from "react-redux";
+import { userAPI } from "../service/userAPI";
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const dispatch = useDispatch();
   const navigator = useNavigate();
-  useEffect(() => {
-    let token = localStorage.getItem("user-token");
-    if (token) dispatch(setToken(token));
-    navigator("/document/home");
-  }, []);
+  // useEffect(() => {
+  //   let token = localStorage.getItem("user-token");
+  //   console.log(token);
+  //   navigator("/document/home");
+  // }, []);
+  // get user info by token
   function handleSubmit(e) {
     e.preventDefault();
     let payload = {
@@ -24,13 +26,13 @@ const Login = () => {
     };
 
     checkUserValidation(payload) &&
-      userApi.register(
+      userAPI.register(
         payload,
         (data) => {
-          if (data.token) {
+          if (data.user) {
             alert(data.message);
-            dispatch(setToken(data.token));
-            localStorage.setItem("user-token", data.token);
+            dispatch(setUserInfo(data.user));
+            localStorage.setItem("user-token", data.user.token);
             navigator("/document/home");
           }
         },

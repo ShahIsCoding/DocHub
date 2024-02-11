@@ -13,9 +13,11 @@ import {
   getSelectedELementId,
   updateElement,
 } from "../utils/whiteboardUtils";
+import { documentAPI } from "../service/documentAPI";
 
-const Whiteboard = ({ socket }) => {
+const Whiteboard = ({ socket, isSaving, setSaving }) => {
   const menu = useSelector((state) => state.menu);
+  const user = useSelector((state) => state.user);
   const { color, size, selectedMenu } = menu;
 
   const { id: documentId } = useParams();
@@ -31,12 +33,20 @@ const Whiteboard = ({ socket }) => {
   const [selectedElementId, setSelectElementId] = useState(null);
 
   useEffect(() => {
+    // login to save whiteboard
+    documentAPI.saveDocument({
+      documentId,
+    });
+    documentAPI.saveUser({ userId: user.userInfo.id, documentId });
+    setSaving(false);
+  }, [isSaving]);
+  useEffect(() => {
     if (canvas === null) return;
     setContext(canvas.getContext("2d"));
     setRoughContext(rough.canvas(canvas));
     setGenerator(rough.canvas(canvas).generator);
   }, [canvas]);
-
+  useEffect();
   useEffect(() => {
     if (!context) return;
     if (elements !== undefined && elements.length > 0) {

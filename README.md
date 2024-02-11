@@ -15,7 +15,7 @@ A collaborative document editing and whiteboarding platform built with the MERN 
 - Express.js for the server
 - React for the front end
 - Node.js for the backend
-- WebSocket for real-time communication
+- socket.io for real-time communication
 
 ## Getting Started
 
@@ -27,13 +27,14 @@ A collaborative document editing and whiteboarding platform built with the MERN 
 ### Installation
 
 1. Clone the repository: `https://github.com/ShahIsCoding/DocHub.git`
-2. Navigate to the project directory: `cd dochub-clone`
-3. Install dependencies: `npm install`
+2. Navigate to the project directory: `cd DocHub`
+3. Install dependencies in the client and server side : `npm install`
 4. Start the development server: `npm start`
 
 ## Usage
 
 - Visit [http://localhost:3000](http://localhost:3000) to access Dochub Clone.
+-PORT :3002 to access server 
 - Collaborate in real-time on documents and utilize the integrated whiteboard.
 
 ## License
