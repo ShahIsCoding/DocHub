@@ -7,7 +7,6 @@ require("./socketIO");
 const cors = require("cors");
 
 const userRouter = require("./router/user.router");
-const documentRouter = require("./router/document.router");
 
 const { default: mongoose } = require("mongoose");
 
