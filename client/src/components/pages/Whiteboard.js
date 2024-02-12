@@ -41,7 +41,7 @@ const Whiteboard = ({ socket }) => {
     if (!context) return;
     if (elements !== undefined && elements.length > 0) {
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      console.log(elements);
+      // console.log(elements);
       elements?.map(({ path }, idx) => {
         roughContext.draw(path);
       });
