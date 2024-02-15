@@ -10,7 +10,8 @@ import { useParams } from "react-router-dom";
 import rough from "roughjs";
 import {
   configureElement,
-  getSelectedELementId,
+  getMouseCursor,
+  getSelectedELement,
   updateElement,
 } from "../utils/whiteboardUtils";
 
@@ -28,7 +29,7 @@ const Whiteboard = ({ socket }) => {
   // created paths
   const [elements, setElements] = useState([]);
   const [drawing, setDrawing] = useState(false);
-  const [selectedElementId, setSelectElementId] = useState(null);
+  const [selectedElement, setSelectElement] = useState(null);
 
   useEffect(() => {
     if (canvas === null) return;
@@ -41,7 +42,7 @@ const Whiteboard = ({ socket }) => {
     if (!context) return;
     if (elements !== undefined && elements.length > 0) {
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      // console.log(elements);
+      selectedElement !== null && roughContext.draw(selectedElement.path);
       elements?.map(({ path }, idx) => {
         roughContext.draw(path);
       });
@@ -83,6 +84,7 @@ const Whiteboard = ({ socket }) => {
   const getAttributes = (e) => {
     let { clientX: positionX, clientY: positionY } = e;
     let { top, left } = canvas.getBoundingClientRect();
+
     let attributes = {
       color,
       size,
@@ -94,6 +96,11 @@ const Whiteboard = ({ socket }) => {
     return attributes;
   };
   const handleMouseMove = (e) => {
+    let mouseAction = "default";
+    if (WhiteboardMenuConstants.MOVE) {
+      mouseAction = getMouseCursor(selectedElement, getAttributes(e));
+      e.target.style.cursor = mouseAction;
+    }
     if (!drawing) return;
     let attributes = getAttributes(e);
     if (selectedMenu !== null) {
@@ -101,12 +108,12 @@ const Whiteboard = ({ socket }) => {
       if (selectedMenu === WhiteboardMenuConstants.ERASE) {
         let elementsCopy = [...elements];
         elementsCopy = elementsCopy.filter(({ id }, idx) => {
-          return id !== selectedElementId;
+          return id !== selectedElement.id;
         });
         setElements(elementsCopy);
       } else {
         if (selectedMenu === WhiteboardMenuConstants.MOVE) {
-          index = selectedElementId;
+          index = selectedElement.id;
         }
         let prevElement = elements[index];
         let updatedElement = updateElement(
@@ -123,6 +130,18 @@ const Whiteboard = ({ socket }) => {
     }
   };
 
+  const setSelectedBoundary = (event, elements, generator) => {
+    let { top, left } = canvas.getBoundingClientRect();
+    if (elements.length > 0) {
+      setSelectElement(
+        getSelectedELement(
+          { x: event.clientX - left, y: event.clientY - top },
+          elements,
+          generator
+        )
+      );
+    }
+  };
   const handleMouseDown = (event) => {
     setDrawing(true);
     let attributes = getAttributes(event);
@@ -131,12 +150,7 @@ const Whiteboard = ({ socket }) => {
         selectedMenu === WhiteboardMenuConstants.MOVE ||
         selectedMenu === WhiteboardMenuConstants.ERASE
       ) {
-        let { top, left } = canvas.getBoundingClientRect();
-        let id = getSelectedELementId(
-          { x: event.clientX - left, y: event.clientY - top },
-          elements
-        );
-        setSelectElementId(id);
+        setSelectedBoundary(event, elements, generator);
       } else {
         let id = elements.length;
         let element = configureElement(id, attributes, generator, selectedMenu);
@@ -147,7 +161,6 @@ const Whiteboard = ({ socket }) => {
   };
   const handleMouseUp = (event) => {
     setDrawing(false);
-    setSelectElementId(null);
     let elementsCopy = [...elements];
     elementsCopy = elementsCopy.filter(({ attributes }, index) => {
       let { currX, currY, prevX, prevY, color } = attributes;

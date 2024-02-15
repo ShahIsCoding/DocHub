@@ -1,4 +1,11 @@
 import { WhiteboardMenuConstants } from "../constants/WhiteboardOptions";
+import {
+  distanceFromPointToLine,
+  getRadian,
+  isInQuad,
+  isOnLine,
+  nearestELement,
+} from "./RandomUtils";
 
 const Drawing = (id, generator, attributes, type) => {
   const { LINE } = WhiteboardMenuConstants;
@@ -38,7 +45,7 @@ const Arc = (id, generator, attributes, type) => {
   let width = currX - prevX;
   let height = currY - prevY;
   let radius = Math.max(Math.abs(width) + 1, Math.abs(height) + 1);
-  console.log(prevX, prevY, radius, radius, 0, getRadian(width, height), true);
+
   let path = generator.arc(
     prevX,
     prevY,
@@ -114,39 +121,8 @@ const configureElement = (id, attributes, generator, type) => {
       break;
   }
 };
-function isInQuad(x, y, currX, currY, prevX, prevY) {
-  return (
-    Math.min(currX, prevX) <= x &&
-    Math.max(currX, prevX) >= x &&
-    Math.min(currY, prevY) <= y &&
-    Math.max(currY, prevY) >= y
-  );
-}
-function distanceFromPointToLine(x0, y0, x1, y1, x2, y2) {
-  const numerator = Math.abs(
-    (y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1
-  );
-  const denominator = Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
-  return numerator / denominator;
-}
 
-const distance = (a, b) =>
-  Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
-
-function isOnLine(x, y, currX, currY, prevX, prevY, maxDistance = 1) {
-  const a = { x: prevX, y: prevY };
-  const b = { x: currX, y: currY };
-  const c = { x, y };
-  const offset = distance(a, b) - (distance(a, c) + distance(b, c));
-  return Math.abs(offset) < maxDistance ? true : false;
-}
-const getRadian = (width, height) => {
-  if (width === 0) return 1;
-  let rad = Math.atan2(height, width);
-  if (rad < 0) rad = Math.abs(rad) + Math.PI;
-  return rad;
-};
-const getSelectedELementId = (pos, elements) => {
+const getSelectedELement = (pos, elements, generator) => {
   let { x, y } = pos;
   const { SQUARE, RECTANGLE, PEN } = WhiteboardMenuConstants;
   let filteredElements = elements.filter(({ type, attributes, id }, idx) => {
@@ -161,75 +137,59 @@ const getSelectedELementId = (pos, elements) => {
         return isOnLine(x, y, currX, currY, prevX, prevY);
     }
   });
-  let res = nearestELement(filteredElements, pos);
-  return res.id;
+  let element = JSON.parse(
+    JSON.stringify(nearestELement(filteredElements, pos))
+  );
+  let offset = 10;
+  let newAttributes = {
+    currX: element.attributes.currX + offset,
+    currY: element.attributes.currY + offset,
+    prevX: element.attributes.prevX - offset,
+    prevY: element.attributes.prevY - offset,
+    color: "white",
+  };
+  let res = configureElement(
+    element.id,
+    newAttributes,
+    generator,
+    element.type
+  );
+  console.log(res);
+  return res;
 };
 
-const getDistance = (element, pos) => {
-  let { x, y } = pos;
-  let { type, attributes } = element;
-  let { currX, currY, prevX, prevY } = attributes;
-  const { SQUARE, RECTANGLE, LINE } = WhiteboardMenuConstants;
-  if (type === SQUARE || type === RECTANGLE) {
-    let dx = Math.min(
-      Math.abs(x - attributes.currX),
-      Math.abs(x - attributes.prevX)
-    );
-    let dy = Math.min(
-      Math.abs(y - attributes.currY),
-      Math.abs(y - attributes.prevY)
-    );
-    return Math.min(dx, dy);
-  } else if (type === LINE)
-    return distanceFromPointToLine(currX, currY, prevX, prevY, x, y);
-};
-const nearestELement = (elements, pos) => {
-  if (elements.length < 0) return null;
-  let res = {
-    idx: 0,
-    dis: getDistance(elements[0], pos),
-  };
-  for (let i = 1; i < elements.length; i++) {
-    let currDis = getDistance(elements[i], pos);
-    if (res.dis > currDis)
-      res = {
-        idx: i,
-        dis: currDis,
-      };
-  }
-  return elements[res.idx];
-};
 const abs = (a) => Math.abs(a);
+
 const getMouseCursor = (element, attributes) => {
   if (attributes === null || element === null) return "default";
   let { currX, currY, prevX, prevY } = element.attributes;
   let { currX: X, currY: Y } = attributes;
 
   if (isInQuad(X, Y, currX, currY, prevX, prevY)) return "move";
-
+  const offset = 10;
   if (
-    (abs(X - prevX) <= 2 && abs(Y - prevY) <= 2) ||
-    (abs(X - currX) <= 2 && abs(Y - currY) <= 2)
+    (abs(X - prevX) <= offset && abs(Y - prevY) <= offset) ||
+    (abs(X - currX) <= offset && abs(Y - currY) <= offset)
   )
     return "nwse-resize";
   if (
-    (abs(X - currX) <= 2 && abs(Y - prevY) <= 2) ||
-    (abs(X - prevX) <= 2 && abs(Y - currY) <= 2)
+    (abs(X - currX) <= offset && abs(Y - prevY) <= offset) ||
+    (abs(X - prevX) <= offset && abs(Y - currY) <= offset)
   )
     return "nesw-resize";
   if (
-    abs(distanceFromPointToLine(X, Y, currX, currY, prevX, currY)) <= 2 ||
-    abs(distanceFromPointToLine(X, Y, prevX, prevY, currX, prevY)) <= 2
+    abs(distanceFromPointToLine(X, Y, currX, currY, prevX, currY)) <= offset ||
+    abs(distanceFromPointToLine(X, Y, prevX, prevY, currX, prevY)) <= offset
   ) {
     return "ns-resize";
   }
   if (
-    abs(distanceFromPointToLine(X, Y, currX, currY, currX, prevY)) <= 2 ||
-    abs(distanceFromPointToLine(X, Y, prevX, prevY, prevX, currY)) <= 2
+    abs(distanceFromPointToLine(X, Y, currX, currY, currX, prevY)) <= offset ||
+    abs(distanceFromPointToLine(X, Y, prevX, prevY, prevX, currY)) <= offset
   ) {
     return "ew-resize";
   }
 
   return "default";
 };
-export { configureElement, getSelectedELementId, updateElement };
+export { configureElement, getSelectedELement, updateElement, getMouseCursor };
