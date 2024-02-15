@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Canvas from "../component/Canvas";
 import {
   WhiteboardMenuConstants,
@@ -14,10 +14,13 @@ import {
   getSelectedELement,
   updateElement,
 } from "../utils/whiteboardUtils";
+import { useHistory } from "../hooks/useHistory";
+import { setSelectedMenu } from "../redux/reducers/MenuReducer";
 
 const Whiteboard = ({ socket }) => {
   const menu = useSelector((state) => state.menu);
   const { color, size, selectedMenu } = menu;
+  const dispatch = useDispatch();
 
   const { id: documentId } = useParams();
   // canvas and context
@@ -27,7 +30,7 @@ const Whiteboard = ({ socket }) => {
   const [generator, setGenerator] = useState(null);
 
   // created paths
-  const [elements, setElements] = useState([]);
+  const [elements, setElements, undo, redo] = useHistory([]);
   const [drawing, setDrawing] = useState(false);
   const [selectedElement, setSelectElement] = useState(null);
 
@@ -42,13 +45,28 @@ const Whiteboard = ({ socket }) => {
     if (!context) return;
     if (elements !== undefined && elements.length > 0) {
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      selectedElement !== null && roughContext.draw(selectedElement.path);
-      elements?.map(({ path }, idx) => {
+      selectedElement !== null &&
+        selectedMenu === WhiteboardMenuConstants.MOVE &&
+        roughContext.draw(selectedElement.path);
+      elements?.forEach(({ path }, idx) => {
         roughContext.draw(path);
       });
     }
   }, [elements, drawing]);
-
+  useEffect(() => {
+    switch (selectedMenu) {
+      case WhiteboardMenuConstants.REDO:
+        setTimeout(() => dispatch(setSelectedMenu(null)), 100);
+        redo();
+        break;
+      case WhiteboardMenuConstants.UNDO:
+        setTimeout(() => dispatch(setSelectedMenu(null)), 100);
+        undo();
+        break;
+      default:
+        break;
+    }
+  }, [selectedMenu]);
   useEffect(() => {
     if (socket == null) return;
     socket.once("load-document", (document) => {});
@@ -57,7 +75,7 @@ const Whiteboard = ({ socket }) => {
 
   const handleReceivedChanges = (socket) => {
     socket.on("wb-receive-changes", (data) => {
-      let { process, element } = data;
+      let { element } = data;
       setElements((prevElements) => {
         let elementsCopy = [...prevElements];
         let index = elementsCopy.findIndex(({ id }) => id === element.id);
@@ -125,7 +143,7 @@ const Whiteboard = ({ socket }) => {
         let elementsCopy = [...elements];
         elementsCopy[index] = updatedElement;
         sendChanges(updatedElement, "update");
-        setElements(elementsCopy);
+        setElements(elementsCopy, true);
       }
     }
   };
@@ -166,7 +184,7 @@ const Whiteboard = ({ socket }) => {
       let { currX, currY, prevX, prevY, color } = attributes;
       return !(currX === prevX && currY === prevY);
     });
-    setElements(elementsCopy);
+    setElements(elementsCopy, true);
   };
   return (
     <div className="flex flex-col">

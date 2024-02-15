@@ -57,7 +57,7 @@ const WhiteBoardMenuDisplay = ({ Menu }) => {
               }`}
             >
               <div
-                className="flex flex-row my-auto"
+                className="flex flex-row my-auto items-center"
                 onClick={(e) =>
                   dispatch(
                     setSelectedMenu(item.Name === COLOR ? PEN : item.Name)
@@ -65,7 +65,7 @@ const WhiteBoardMenuDisplay = ({ Menu }) => {
                 }
               >
                 <div className="">{item.Name}</div>
-                {/* <div className="ml-2">{item.icon}</div> */}
+                <div className="mx-3">{item.icon}</div>
                 {handleInputChoice(item.Name)}
               </div>
             </div>

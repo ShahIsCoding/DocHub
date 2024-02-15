@@ -1,4 +1,4 @@
-import { FaPen, FaReact, FaShapes } from "react-icons/fa";
+import { FaPen, FaReact, FaRedo, FaShapes, FaUndo } from "react-icons/fa";
 import { BsFillEraserFill } from "react-icons/bs";
 import { PiLineSegment, PiRectangleDuotone } from "react-icons/pi";
 import { GiSquare } from "react-icons/gi";
@@ -18,6 +18,8 @@ export const WhiteboardMenuConstants = {
   LINE: "LINE",
   MOVE: "MOVE",
   TOOLS: "TOOLS",
+  UNDO: "UNDO",
+  REDO: "REDO",
 };
 export const WhiteboardOptionsConstants = [
   {
@@ -35,7 +37,6 @@ export const WhiteboardOptionsConstants = [
         Name: WhiteboardMenuConstants.SIZE,
         child: false,
       },
-      ,
     ],
   },
   {
@@ -52,6 +53,18 @@ export const WhiteboardOptionsConstants = [
         key: 1.4,
         Name: WhiteboardMenuConstants.MOVE,
         icon: <IoMoveOutline />,
+        child: false,
+      },
+      {
+        key: 1.5,
+        Name: WhiteboardMenuConstants.UNDO,
+        icon: <FaUndo />,
+        child: false,
+      },
+      {
+        key: 1.6,
+        Name: WhiteboardMenuConstants.REDO,
+        icon: <FaRedo />,
         child: false,
       },
     ],
