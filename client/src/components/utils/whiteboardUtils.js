@@ -199,5 +199,37 @@ const nearestELement = (elements, pos) => {
   }
   return elements[res.idx];
 };
+const abs = (a) => Math.abs(a);
+const getMouseCursor = (element, attributes) => {
+  if (attributes === null || element === null) return "default";
+  let { currX, currY, prevX, prevY } = element.attributes;
+  let { currX: X, currY: Y } = attributes;
 
+  if (isInQuad(X, Y, currX, currY, prevX, prevY)) return "move";
+
+  if (
+    (abs(X - prevX) <= 2 && abs(Y - prevY) <= 2) ||
+    (abs(X - currX) <= 2 && abs(Y - currY) <= 2)
+  )
+    return "nwse-resize";
+  if (
+    (abs(X - currX) <= 2 && abs(Y - prevY) <= 2) ||
+    (abs(X - prevX) <= 2 && abs(Y - currY) <= 2)
+  )
+    return "nesw-resize";
+  if (
+    abs(distanceFromPointToLine(X, Y, currX, currY, prevX, currY)) <= 2 ||
+    abs(distanceFromPointToLine(X, Y, prevX, prevY, currX, prevY)) <= 2
+  ) {
+    return "ns-resize";
+  }
+  if (
+    abs(distanceFromPointToLine(X, Y, currX, currY, currX, prevY)) <= 2 ||
+    abs(distanceFromPointToLine(X, Y, prevX, prevY, prevX, currY)) <= 2
+  ) {
+    return "ew-resize";
+  }
+
+  return "default";
+};
 export { configureElement, getSelectedELementId, updateElement };
