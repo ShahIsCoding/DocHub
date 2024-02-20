@@ -7,16 +7,19 @@ const { getToken } = require("../utils/tokenUtils");
 
 router.post("/login", (req, res) => {
   let { username, password } = req.body;
-  userModel.findOne({ username }).then((resp) => {
-    if (resp.password === password) {
-      let token = getToken(resp.id);
-      res.status(201).cookie(token).send({
-        statusCode: 201,
-        message: "User Login",
-        token: token,
-      });
-    }
-  });
+  userModel
+    .findOne({ username: username })
+    .then((user) => {
+      if (!user) {
+        res.status(404).send({ message: "user does not exists" });
+      } else {
+        let token = getToken(user.id);
+        res.status(200).send({ message: "logged In", user: user, token });
+      }
+    })
+    .catch((err) => {
+      res.status(400).send({ message: err.message });
+    });
 });
 
 router.post("/register", (req, res) => {
@@ -44,7 +47,7 @@ router.post("/register", (req, res) => {
             res.status(400).send({ message: err.message });
           });
       } else {
-        res.status(400).send({ message: "user already exists", user: user });
+        res.status(400).send({ message: "user already exists" });
       }
     })
     .catch((err) => {

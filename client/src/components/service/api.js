@@ -11,4 +11,10 @@ export const userApi = {
       .then((resp) => onSuccess && onSuccess(resp.data))
       .catch((err) => onError && onError(err));
   },
+  login: (payload, onSuccess, onError) => {
+    api
+      .post("/user/login", payload)
+      .then((resp) => onSuccess && onSuccess(resp.data))
+      .catch((err) => onError && onError(err));
+  },
 };
