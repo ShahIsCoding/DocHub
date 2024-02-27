@@ -16,6 +16,7 @@ import {
 } from "../utils/whiteboardUtils";
 import { useHistory } from "../hooks/useHistory";
 import { setSelectedMenu } from "../redux/reducers/MenuReducer";
+import { documentApi } from "../service/api";
 
 const Whiteboard = ({ socket }) => {
   const menu = useSelector((state) => state.menu);
@@ -33,6 +34,7 @@ const Whiteboard = ({ socket }) => {
   const [elements, setElements, undo, redo] = useHistory([]);
   const [drawing, setDrawing] = useState(false);
   const [selectedElement, setSelectElement] = useState(null);
+  const { id: params } = useParams();
 
   useEffect(() => {
     if (canvas === null) return;
@@ -53,6 +55,7 @@ const Whiteboard = ({ socket }) => {
       });
     }
   }, [elements, drawing]);
+
   useEffect(() => {
     switch (selectedMenu) {
       case WhiteboardMenuConstants.REDO:
@@ -63,6 +66,15 @@ const Whiteboard = ({ socket }) => {
         setTimeout(() => dispatch(setSelectedMenu(null)), 100);
         undo();
         break;
+      case WhiteboardMenuConstants.SAVE: {
+        documentApi.saveDocument({
+          documentId: params.split(":")[1],
+          data: elements,
+          name: document.title,
+        });
+        setTimeout(() => dispatch(setSelectedMenu(null)), 100);
+        break;
+      }
       default:
         break;
     }
@@ -92,6 +104,7 @@ const Whiteboard = ({ socket }) => {
   useEffect(() => {
     handleReceivedChanges(socket);
   }, [socket]);
+
   const sendChanges = (element, process) => {
     let data = {
       element,

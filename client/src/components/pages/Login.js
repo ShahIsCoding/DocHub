@@ -17,10 +17,12 @@ const Login = () => {
 
   useEffect(() => {
     let token = localStorage.getItem("user-token");
+
     if (token) {
       dispatch(setToken(token));
-      navigator("/document/home");
     }
+
+    if (token) navigator("/document/home");
   }, []);
 
   function handleSubmit(e) {
@@ -44,7 +46,8 @@ const Login = () => {
             }
           },
           (err) => {
-            alert(err.response.data.message);
+            console.log(err);
+            if (err.response.data.message) alert(err.response.data.message);
             console.error(err.response.data.message);
           }
         );
@@ -60,8 +63,9 @@ const Login = () => {
             }
           },
           (err) => {
-            alert(err.response.data.message);
-            console.error(err.response.data.message);
+            console.error(err);
+            // if (err.response.data.message) alert(err.response.data.message);
+            // console.error(err.response.data.message);
           }
         );
     } else {
@@ -94,21 +98,7 @@ const Login = () => {
               setValue={setPassword}
               type="password"
             />
-            {/* <div className="relative flex gap-x-3">
-              <div className="flex h-6 items-center">
-                <input
-                  checked={rememberMe}
-                  onChange={() => setRememberMe(!rememberMe)}
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                />
-              </div>
-              <div className="text-sm leading-6">
-                <label htmlFor="comments" className="font-medium text-gray-900">
-                  Remember Me
-                </label>
-              </div>
-            </div> */}
+
             <button
               type="submit"
               className="text-white w-full bg-blue-800 text-center p-3 my-3 rounded cursor-pointer"

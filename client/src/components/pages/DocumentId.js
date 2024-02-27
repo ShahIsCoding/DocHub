@@ -8,15 +8,16 @@ import { handleDocument } from "../utils/documentUtils";
 const DocumentId = ({ socket }) => {
   const [documentName, setDocumentName] = useState("Untitled Document");
   const [isSharingModelOpen, setSharingModel] = useState(false);
+
   const [type, setType] = useState(null);
   const { id: params } = useParams();
 
   function hanldeSharing() {
     setSharingModel((value) => !value);
   }
-  function hanldeSaving() {}
   useEffect(() => {
     document.title = documentName;
+
     if (params !== null) {
       setType(params.split(":")[0]);
     }
@@ -43,12 +44,6 @@ const DocumentId = ({ socket }) => {
             </div>
           </div>
           <div className="flex flex-row float-right">
-            <div
-              className="my-auto mx-4 rounded bg-blue-300 py-2 px-5 cursor-pointer"
-              onClick={hanldeSaving}
-            >
-              Save
-            </div>
             <div
               className="my-auto mx-4 rounded bg-blue-300 py-2 px-5 cursor-pointer"
               onClick={hanldeSharing}

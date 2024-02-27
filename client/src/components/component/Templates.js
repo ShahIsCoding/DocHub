@@ -1,17 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import uuidv4 from "../utils/UUID";
 import { docType } from "../constants/DocumentOptions";
+import { documentApi } from "../service/api";
 
 const Templates = () => {
   const navigate = useNavigate();
+
   const handleClick = (key) => {
-    let UUID = uuidv4();
-    navigate(
-      `/document/doc/${
-        key === docType.document ? "document:" : "whiteboard:"
-      }${UUID}`
-    );
+    const getUUID = async (key) => {
+      let payload = {
+        type: key === docType.document ? "document" : "whiteboard",
+      };
+      await documentApi.createDocument(
+        payload,
+        (res) => {
+          if (res.type !== undefined && res?._id?.split(":")[1] !== undefined)
+            navigate(`/document/doc/${res.type + ":" + res._id.split(":")[1]}`);
+        },
+        (err) => console.error(err)
+      );
+    };
+    getUUID(key);
   };
   return (
     <div className="bg-slate-200 py-3 border">
