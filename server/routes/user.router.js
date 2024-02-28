@@ -5,7 +5,14 @@ const router = express.Router();
 const { getToken, verifyToken } = require("../utils/tokenUtils");
 
 const { mongoose } = require("mongoose");
-
+// routes/user.router
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Retrieve a list of JSONPlaceholder users
+ *     description: Retrieve a list of users from JSONPlaceholder. Can be used to populate a list of fake users when prototyping or testing an API.
+ */
 router
   .post("/login", async (req, res) => {
     try {

@@ -4,7 +4,6 @@ import {
   Route,
   Routes,
   Navigate,
-  Outlet,
   useNavigate,
 } from "react-router-dom";
 
@@ -13,7 +12,6 @@ import Login from "./components/pages/Login";
 import DocumentId from "./components/pages/DocumentId";
 import { io } from "socket.io-client";
 import { handleConnection } from "./components/utils/ioUtils";
-import { useSelector } from "react-redux";
 import { apiConstants } from "./components/constants/apiConstants";
 
 function App() {

@@ -43,9 +43,9 @@ export const userApi = {
 };
 
 export const documentApi = {
-  getDocument: (onSuccess, onError) => {
+  getDocument: (payload, onSuccess, onError) => {
     api
-      .get("/document/getDocument")
+      .get(`/document/getDocument:${payload}`)
       .then((resp) => onSuccess && onSuccess(resp.data))
       .catch((err) => onError && onError(err));
   },

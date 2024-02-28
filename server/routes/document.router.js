@@ -7,14 +7,15 @@ const userSchema = require("../model/user.Schema");
 
 router.use(verifyToken);
 router
-  .get("/getDocument", (req, res) => {
-    let { documentId } = req.body;
+  .get("/getDocument:id", (req, res) => {
+    let { id: documentId } = req.params;
+    console.log(CONSTANTS.DOCUMENT + documentId);
     documentModel
-      .findOne({ id: documentId })
+      .findById(CONSTANTS.DOCUMENT + documentId)
       .populate("users")
       .then((foundDocument) => {
         res.send({
-          foundDocument,
+          document: foundDocument,
         });
       })
       .catch((err) => {

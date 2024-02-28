@@ -1,14 +1,39 @@
 const express = require("express");
-const http = require("http");
+const swaggerUI = require("swagger-ui-express");
+const swaggerSpec = require("./swagger");
+const { createServer } = require("http");
 require("dotenv").config();
 const app = express();
-const server = http.createServer(app);
-require("./socketIO");
+const server = createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("connected", socket.id);
+  socket.on("get-document", (documentId) => {
+    const data = "";
+    socket.join(documentId);
+    socket.emit("load-document", data);
+    socket.on("send-changes", (data) => {
+      console.log(data);
+      socket.broadcast.to(documentId).emit("receive-changes", data);
+    });
+    socket.on("whiteboardChanges", (data) => {
+      socket.broadcast.to(documentId).emit("wb-receive-changes", data);
+    });
+  });
+  console.log("connected");
+});
 const cors = require("cors");
 
-const userRouter = require("./router/user.router");
-const documentRouter = require("./router/document.router");
+const userRouter = require("./routes/user.router");
+const documentRouter = require("./routes/document.router");
 
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 const { default: mongoose } = require("mongoose");
 
 app.use(express.json());

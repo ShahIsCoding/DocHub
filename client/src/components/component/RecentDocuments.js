@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { documentApi, userApi } from "../service/api";
 import { docType } from "../constants/DocumentOptions";
+import { useNavigate } from "react-router-dom";
 
 const RecentDocuments = () => {
   const [doc, setDoc] = useState(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     doc === null &&
       userApi.getDocuments(
@@ -23,6 +24,11 @@ const RecentDocuments = () => {
       },
       (err) => console.error(err)
     );
+  };
+  const handleOpen = (item) => {
+    console.log(item);
+    let url = item.type + ":" + item._id.split(":")[1];
+    navigate(`/document/doc/${url}`, {});
   };
   const Documents = (doc) => {
     if (doc?.length > 0) {
@@ -52,7 +58,10 @@ const RecentDocuments = () => {
             </div>
 
             <div className="w-full p-4 flex flex-row justify-between">
-              <div className="hover:bg-blue-500 p-3 rounded cursor-pointer">
+              <div
+                className="hover:bg-blue-500 p-3 rounded cursor-pointer"
+                onClick={() => handleOpen(item)}
+              >
                 Open
               </div>
               <div
