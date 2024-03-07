@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
-import Logo from "../component/Logo";
-import { api, userApi } from "../service/api";
-import { setToken } from "../redux/reducers/LoginReducer";
+import { userApi } from "../service/api";
+import { setToken, setUserId } from "../redux/reducers/LoginReducer";
 import { checkUserValidation } from "../utils/Validation";
 import { useDispatch } from "react-redux";
 import InputLabel from "../component/InputLabel";
+import { setNotification } from "../redux/reducers/NotificationReducer";
+
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("abcd@gmail.com");
   const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState("1234");
   const [isLogin, setIsLogin] = useState(true);
   const dispatch = useDispatch();
   const navigator = useNavigate();
@@ -21,8 +22,14 @@ const Login = () => {
     if (token) {
       dispatch(setToken(token));
     }
-
-    if (token) navigator("/document/home");
+    userApi.refreshLogin((data) => {
+      if (data.token) {
+        dispatch(setToken(data.token));
+        dispatch(setUserId(data._id));
+        localStorage.setItem("user-token", data.token);
+        navigator("/document/home");
+      }
+    });
   }, []);
 
   function handleSubmit(e) {
@@ -35,41 +42,36 @@ const Login = () => {
 
     if (checkUserValidation(payload)) {
       !isLogin &&
-        userApi.register(
-          payload,
-          (data) => {
-            if (data.token) {
-              alert(data.message);
-              dispatch(setToken(data.token));
-              localStorage.setItem("user-token", data.token);
-              navigator("/document/home");
-            }
-          },
-          (err) => {
-            console.log(err);
-            if (err.response.data.message) alert(err.response.data.message);
-            console.error(err.response.data.message);
+        userApi.register(payload, (data) => {
+          if (data.token) {
+            dispatch(setToken(data.token));
+            dispatch(setUserId(data._id));
+            localStorage.setItem("user-token", data.token);
+            navigator("/document/home");
           }
-        );
+        });
       isLogin &&
-        userApi.login(
-          payload,
-          (data) => {
-            if (data.token) {
-              alert(data.message);
-              dispatch(setToken(data.token));
-              localStorage.setItem("user-token", data.token);
-              navigator("/document/home");
-            }
-          },
-          (err) => {
-            console.error(err);
-            // if (err.response.data.message) alert(err.response.data.message);
-            // console.error(err.response.data.message);
+        userApi.login(payload, (data) => {
+          if (data.token) {
+            dispatch(setToken(data.token));
+            dispatch(setUserId(data._id));
+            localStorage.setItem("user-token", data.token);
+            navigator("/document/home");
           }
-        );
+        });
     } else {
-      alert("wrong input");
+      dispatch(
+        setNotification({
+          message: "Wrong Input",
+          statusCode: 400,
+        })
+      );
+      dispatch(
+        setNotification({
+          message: "Wrong Input",
+          statusCode: 400,
+        })
+      );
     }
   }
 

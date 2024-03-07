@@ -1,10 +1,7 @@
 function handleConnection(setSocket, io) {
-  const soc = io("http://localhost:3002");
+  const soc = io("http://localhost:3002", { autoConnect: false });
   if (soc.connected) console.log("CONNECTED");
   setSocket(soc);
-  return () => {
-    soc.disconnect();
-  };
 }
 
 export { handleConnection };

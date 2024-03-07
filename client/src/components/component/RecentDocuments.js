@@ -8,27 +8,19 @@ const RecentDocuments = () => {
   const navigate = useNavigate();
   useEffect(() => {
     doc === null &&
-      userApi.getDocuments(
-        (doc) => {
-          setDoc(doc.documents);
-        },
-        (err) => console.error(err)
-      );
+      userApi.getDocuments((doc) => {
+        setDoc(doc.documents);
+      });
   }, [doc]);
 
   const handleDelete = (doc) => {
-    documentApi.removeDocuemnt(
-      doc._id,
-      (resp) => {
-        setDoc((prev) => prev.filter((item) => item._id !== doc._id));
-      },
-      (err) => console.error(err)
-    );
+    documentApi.removeDocuemnt(doc._id, (resp) => {
+      setDoc((prev) => prev.filter((item) => item._id !== doc._id));
+    });
   };
   const handleOpen = (item) => {
-    console.log(item);
     let url = item.type + ":" + item._id.split(":")[1];
-    navigate(`/document/doc/${url}`, {});
+    navigate(`/document/doc/${url}`);
   };
   const Documents = (doc) => {
     if (doc?.length > 0) {

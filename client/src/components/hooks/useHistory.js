@@ -8,7 +8,7 @@ export const useHistory = (initialState) => {
     const newState =
       typeof action === "function" ? action(history[index]) : action;
     if (overwrite) {
-      const newHistory = [...history];
+      const newHistory = history.length === 0 ? [] : [...history];
       newHistory[index] = newState;
       setHistory(newHistory);
     } else {

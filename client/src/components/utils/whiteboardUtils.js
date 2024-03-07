@@ -1,3 +1,4 @@
+import { access } from "../constants/DocumentOptions";
 import { WhiteboardMenuConstants } from "../constants/WhiteboardOptions";
 import {
   distanceFromPointToLine,
@@ -15,7 +16,7 @@ const Drawing = (id, generator, attributes, type) => {
       roughness: 1,
       stroke: attributes.color,
     });
-    return { id, attributes, path, type };
+    return { id, attributes, path, type, access: access.free };
   }
   let currentPath = [];
   previousPath?.forEach((item, indx) => {
@@ -38,7 +39,7 @@ const Drawing = (id, generator, attributes, type) => {
   });
   const updatedAttributes = { ...attributes, previousPath: currentPath };
 
-  return { id, attributes: updatedAttributes, path, type };
+  return { id, attributes: updatedAttributes, path, type, access: access.free };
 };
 const Arc = (id, generator, attributes, type) => {
   let { currX, currY, prevX, prevY, color, size } = attributes;
@@ -58,7 +59,7 @@ const Arc = (id, generator, attributes, type) => {
       stroke: color,
     }
   );
-  return { id, attributes, path, type };
+  return { id, attributes, path, type, access: access.free };
 };
 
 function QuadCurve(id, generator, attributes, type) {
@@ -76,7 +77,7 @@ function QuadCurve(id, generator, attributes, type) {
     roughness: 0.9,
     stroke: color,
   });
-  return { id, attributes, path, type };
+  return { id, attributes, path, type, access: access.free };
 }
 const updateElement = (element, currAttributes, generator, selectedMenu) => {
   const { PEN, SQUARE, RECTANGLE, LINE, MOVE, CIRCLE } =

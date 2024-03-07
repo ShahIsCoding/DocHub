@@ -4,101 +4,103 @@ const documentModel = require("../model/document.Schema");
 const CONSTANTS = require("../constants");
 const { verifyToken } = require("../utils/tokenUtils");
 const userSchema = require("../model/user.Schema");
+const { handleError } = require("../utils/errorUtils");
 
 router.use(verifyToken);
 router
-  .get("/getDocument:id", (req, res) => {
+  .get("/getDocument:id", (req, res, next) => {
     let { id: documentId } = req.params;
-    console.log(CONSTANTS.DOCUMENT + documentId);
     documentModel
       .findById(CONSTANTS.DOCUMENT + documentId)
       .populate("users")
       .then((foundDocument) => {
-        res.send({
+        res.json({
           document: foundDocument,
         });
       })
       .catch((err) => {
-        res.status(400).send({
-          message: err.message,
-        });
+        next(err);
       });
   })
-  .post("/createDocument", (req, res) => {
+  .post("/createDocument", async (req, res, next) => {
     let { type } = req.body;
     let userId = req.decoded.data;
-    documentModel
-      .create({
+    try {
+      let createdDocument = await documentModel.create({
         type,
         users: [userId],
-      })
-      .then(async (createDoc) => {
-        let user = await userSchema.findById(userId);
-        let documents = user.documents;
-        user.documents = [...documents, createDoc._id];
-        user.save();
-
-        res.status(201).send(createDoc);
-      })
-      .catch((err) =>
-        res.status(500).send({ name: err.name, message: err.message })
-      );
+      });
+      let user = await userSchema.findById(userId);
+      let documents = user.documents;
+      user.documents = [...documents, createdDocument._id];
+      user.save();
+      res.status(201).json({
+        message: "A new document created",
+        _id: createdDocument._id,
+        type: createdDocument.type,
+      });
+    } catch {
+      (err) => {
+        next(err);
+      };
+    }
   })
-  .post("/saveDocument", async (req, res) => {
+  .post("/saveDocument", async (req, res, next) => {
     try {
       let { documentId, data, name } = req.body;
       documentId = CONSTANTS.DOCUMENT + ":" + documentId;
       let foundDocument = await documentModel.findById(documentId);
-      if (!foundDocument)
-        return res.status(404).send({ message: "Doucment does not exist" });
+      if (!foundDocument) next(handleError(404, "Doucment does not exist"));
 
       foundDocument.name = name;
       foundDocument.data = [...data];
       foundDocument.save();
 
-      res.status(200).send({ message: "data Saved" });
+      res.status(200).json({ message: "Document has been saved" });
     } catch (err) {
-      res.status(500).send({ name: err.name, message: err.message });
+      next(err);
     }
   })
-  .delete("/removeDocument/:documentId", verifyToken, async (req, res) => {
-    try {
-      let documentId = req.params.documentId;
-      console.log(documentId);
-      let foundDocument = await documentModel.findById(documentId);
+  .delete(
+    "/removeDocument/:documentId",
+    verifyToken,
+    async (req, res, next) => {
+      try {
+        let documentId = req.params.documentId;
 
-      let accessUsers = foundDocument.users;
-      accessUsers.forEach(async (userid, idx) => {
-        let user = await userSchema.findById(userid);
-        let documents = user.documents.filter((id) => id !== documentId);
-        user.documents = documents;
-        user.save();
-      });
-      foundDocument.deleteOne();
-      res.status(200).send({ message: "deleted" });
-    } catch (err) {
-      res.status(500).send({ name: err.name, message: err.message });
+        let foundDocument = await documentModel.findById(documentId);
+
+        let accessUsers = foundDocument.users;
+        accessUsers.forEach(async (userid, idx) => {
+          let user = await userSchema.findById(userid);
+          let documents = user.documents.filter((id) => id !== documentId);
+          user.documents = documents;
+          user.save();
+        });
+        foundDocument.deleteOne();
+        res.status(200).json({ message: `${foundDocument.name} deleted` });
+      } catch (err) {
+        next(err);
+      }
     }
-  })
-  .post("/addUser", (req, res) => {
+  )
+  .post("/addUser", (req, res, next) => {
     let { userId, documentId } = req.body;
     documentModel
       .findOne({ id: CONSTANTS.DOCUMENT + ":" + documentId })
       .then((req, res) => {
         if (req === null) {
-          res.status(401).send({
+          res.status(404).send({
             message: "Docuemnt Not Found",
           });
         } else {
           let users = [...req.user];
           if (users.indexOf(userId) == -1) users = [...users, user];
-          res.status(200).send({ message: "updation done" });
+          res.status(200).json({ message: "updation done" });
         }
       })
       .catch((err) => {
-        res.status(400).send({
-          message: err.message,
-        });
+        next(err);
       });
   });
 

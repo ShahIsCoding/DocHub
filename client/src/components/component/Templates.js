@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { docType } from "../constants/DocumentOptions";
 import { documentApi } from "../service/api";
@@ -11,14 +11,11 @@ const Templates = () => {
       let payload = {
         type: key === docType.document ? "document" : "whiteboard",
       };
-      await documentApi.createDocument(
-        payload,
-        (res) => {
-          if (res.type !== undefined && res?._id?.split(":")[1] !== undefined)
-            navigate(`/document/doc/${res.type + ":" + res._id.split(":")[1]}`);
-        },
-        (err) => console.error(err)
-      );
+      await documentApi.createDocument(payload, (res) => {
+        console.log(res);
+        if (res.type !== undefined && res?._id?.split(":")[1] !== undefined)
+          navigate(`/document/doc/${res.type + ":" + res._id.split(":")[1]}`);
+      });
     };
     getUUID(key);
   };

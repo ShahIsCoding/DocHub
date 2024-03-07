@@ -17,6 +17,7 @@ import {
 import { useHistory } from "../hooks/useHistory";
 import { setSelectedMenu } from "../redux/reducers/MenuReducer";
 import { documentApi } from "../service/api";
+import { constants } from "../constants/apiConstants";
 
 const Whiteboard = ({ socket }) => {
   const menu = useSelector((state) => state.menu);
@@ -33,7 +34,7 @@ const Whiteboard = ({ socket }) => {
   // created paths
   const [elements, setElements, undo, redo] = useHistory([]);
   const [drawing, setDrawing] = useState(false);
-  const [selectedElement, setSelectElement] = useState(null);
+  const [selectedElement, setSelectedElement] = useState(null);
   const { id: params } = useParams();
 
   useEffect(() => {
@@ -41,7 +42,31 @@ const Whiteboard = ({ socket }) => {
     setContext(canvas.getContext("2d"));
     setRoughContext(rough.canvas(canvas));
     setGenerator(rough.canvas(canvas).generator);
-  }, [canvas]);
+    socket.connect();
+    return () => {
+      socket.disconnect();
+    };
+  }, [canvas, socket]);
+
+  useEffect(() => {
+    socket.emit("get-document", documentId);
+    socket.on("receive-changes-wb", (data) => {
+      console.log(data);
+    });
+  }, [socket]);
+  useEffect(() => {
+    documentApi.getDocument(params.split(":")[1], (resp) =>
+      setElements(resp.document.data, true)
+    );
+  }, []);
+
+  useEffect(() => {
+    documentApi.getDocument(
+      params.split(":")[1],
+      (resp) => setElements(resp.document.data, true),
+      (err) => console.error(err)
+    );
+  }, []);
 
   useEffect(() => {
     if (!context) return;
@@ -53,10 +78,18 @@ const Whiteboard = ({ socket }) => {
       elements?.forEach(({ path }, idx) => {
         roughContext.draw(path);
       });
+      let payload = {
+        elements: elements,
+        uuid: constants._id,
+      };
+      socket.emit("send-changes-wb", payload);
     }
   }, [elements, drawing]);
 
   useEffect(() => {
+    if (selectedMenu !== WhiteboardMenuConstants.MOVE) {
+      setSelectedElement(null);
+    }
     switch (selectedMenu) {
       case WhiteboardMenuConstants.REDO:
         setTimeout(() => dispatch(setSelectedMenu(null)), 100);
@@ -79,42 +112,15 @@ const Whiteboard = ({ socket }) => {
         break;
     }
   }, [selectedMenu]);
-  useEffect(() => {
-    if (socket == null) return;
-    socket.once("load-document", (document) => {});
-    socket.emit("get-document", documentId);
-  }, [socket, documentId]);
 
-  const handleReceivedChanges = (socket) => {
-    socket.on("wb-receive-changes", (data) => {
-      let { element } = data;
-      setElements((prevElements) => {
-        let elementsCopy = [...prevElements];
-        let index = elementsCopy.findIndex(({ id }) => id === element.id);
-        if (index === -1) {
-          return [...prevElements, element];
-        } else {
-          elementsCopy[index] = element;
-          return elementsCopy;
-        }
-      });
-    });
-  };
-
-  useEffect(() => {
-    handleReceivedChanges(socket);
-  }, [socket]);
-
-  const sendChanges = (element, process) => {
-    let data = {
-      element,
-      process,
-    };
-    socket.emit("whiteboardChanges", data);
-  };
-  const getAttributes = (e) => {
+  const getAttributes = (e, canvas) => {
     let { clientX: positionX, clientY: positionY } = e;
-    let { top, left } = canvas.getBoundingClientRect();
+    let top = 0,
+      left = 0;
+    if (canvas?.getBoundingClientRect()) {
+      top = canvas.getBoundingClientRect().top;
+      left = canvas.getBoundingClientRect().left;
+    }
 
     let attributes = {
       color,
@@ -126,22 +132,35 @@ const Whiteboard = ({ socket }) => {
     };
     return attributes;
   };
+  const setSelectedBoundary = (event, elements, generator, canvas) => {
+    let { top, left } = canvas.getBoundingClientRect();
+    if (elements.length > 0) {
+      let selectedElement = getSelectedELement(
+        { x: event.clientX - left, y: event.clientY - top },
+        elements,
+        generator
+      );
+
+      setSelectedElement(selectedElement);
+    }
+  };
   const handleMouseMove = (e) => {
     let mouseAction = "default";
     if (WhiteboardMenuConstants.MOVE) {
-      mouseAction = getMouseCursor(selectedElement, getAttributes(e));
+      mouseAction = getMouseCursor(selectedElement, getAttributes(e, canvas));
       e.target.style.cursor = mouseAction;
     }
     if (!drawing) return;
-    let attributes = getAttributes(e);
+    let attributes = getAttributes(e, canvas);
     if (selectedMenu !== null) {
       let index = elements.length - 1;
+      if (index < 0) return;
       if (selectedMenu === WhiteboardMenuConstants.ERASE) {
         let elementsCopy = [...elements];
         elementsCopy = elementsCopy.filter(({ id }, idx) => {
           return id !== selectedElement.id;
         });
-        setElements(elementsCopy);
+        setElements(elementsCopy, true);
       } else {
         if (selectedMenu === WhiteboardMenuConstants.MOVE) {
           index = selectedElement.id;
@@ -155,37 +174,23 @@ const Whiteboard = ({ socket }) => {
         );
         let elementsCopy = [...elements];
         elementsCopy[index] = updatedElement;
-        sendChanges(updatedElement, "update");
         setElements(elementsCopy, true);
       }
     }
   };
 
-  const setSelectedBoundary = (event, elements, generator) => {
-    let { top, left } = canvas.getBoundingClientRect();
-    if (elements.length > 0) {
-      setSelectElement(
-        getSelectedELement(
-          { x: event.clientX - left, y: event.clientY - top },
-          elements,
-          generator
-        )
-      );
-    }
-  };
   const handleMouseDown = (event) => {
     setDrawing(true);
-    let attributes = getAttributes(event);
+    let attributes = getAttributes(event, canvas);
     if (selectedMenu !== null) {
       if (
         selectedMenu === WhiteboardMenuConstants.MOVE ||
         selectedMenu === WhiteboardMenuConstants.ERASE
       ) {
-        setSelectedBoundary(event, elements, generator);
+        setSelectedBoundary(event, elements, generator, canvas);
       } else {
         let id = elements.length;
         let element = configureElement(id, attributes, generator, selectedMenu);
-        sendChanges(element, "add");
         setElements((prev) => [...prev, element]);
       }
     }
@@ -197,7 +202,7 @@ const Whiteboard = ({ socket }) => {
       let { currX, currY, prevX, prevY, color } = attributes;
       return !(currX === prevX && currY === prevY);
     });
-    setElements(elementsCopy, true);
+    setElements(elementsCopy);
   };
   return (
     <div className="flex flex-col">
