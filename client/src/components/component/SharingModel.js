@@ -10,6 +10,7 @@ const SharingModel = ({ open, setOpen }) => {
   function handleDeleteEmail(idx) {
     setEmailIdList((prevList) => prevList.filter((_, i) => i !== idx));
   }
+  function handleSendInvitation() {}
   function handleCopyUrl() {
     navigator.clipboard.writeText(location.pathname);
   }
@@ -62,12 +63,18 @@ const SharingModel = ({ open, setOpen }) => {
               Add Email
             </button>
             <button
+              onClick={handleSendInvitation}
+              className="p-2 bg-blue-300 my-2 rounded"
+            >
+              Send Invitation
+            </button>
+            {/* <button
               onClick={handleCopyUrl}
               className="p-2 bg-orange-300 my-2 rounded flex flex-row items-center justify-center"
             >
               <MdCopyAll fontSize="2rem" />
               <div>Copy URL</div>
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

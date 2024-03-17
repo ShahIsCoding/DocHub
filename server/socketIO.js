@@ -1,24 +1,42 @@
-const userElementsMap = new Map();
-function getNewDate() {
-  let newData = [];
-  userElementsMap.forEach((value) => newData.push(...value));
-  console.log(userElementsMap);
-  return newData;
-}
 function handleIO(io) {
   if (!io) return;
+  let elementMap = new Map();
+  let blockedId = new Set();
   io.on("connection", (socket) => {
     console.log("connected", socket.id);
-    socket.on("get-document", (documentId) => {
+    socket.on("join-document", (documentId) => {
       socket.join(documentId);
+      socket.on("block-whiteboard-elementId", (payload) => {
+        let { data: element } = payload;
+        let elementId = element.id;
+        if (!blockedId.has(elementId)) {
+          blockedId.add(elementId);
+          socket.broadcast.emit("block-whiteboard-elementId", blockedId);
+        }
+      });
+      socket.on("unblock-whiteboard-elementId", (payload) => {
+        let { data: element } = payload;
+        let elementId = element?.id;
+        if (blockedId.has(elementId)) {
+          blockedId.delete(elementId);
+          socket.broadcast.emit("unblock-whiteboard-elementId", elementId);
+        }
+      });
+      socket.on("updated-whiteboard-data", (payload) => {
+        elementMap.set(payload.userId, payload.data);
+        console.log("sending data");
 
-      // socket.on("send-changes", (data) => {
-      //   socket.broadcast.to(documentId).emit("receive-changes", data);
-      // });
-      socket.on("send-changes-wb", (payload) => {
-        userElementsMap.set(payload.uuid, payload.elements);
-        let data = getNewDate();
-        io.to(documentId).emit("receive-changes-wb", data);
+        let elementMapObject = {};
+        elementMap.forEach((value, key) => {
+          elementMapObject[key] = value;
+        });
+
+        let newpayload = {
+          keys: Array.from(elementMap.keys()),
+          elementMap: elementMapObject,
+        };
+
+        socket.broadcast.emit("updated-whiteboard-data", newpayload);
       });
     });
   });

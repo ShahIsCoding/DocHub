@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Canvas from "../component/Canvas";
 import {
@@ -10,29 +10,39 @@ import { useParams } from "react-router-dom";
 import rough from "roughjs";
 import {
   configureElement,
+  getBoundaryElement,
   getMouseCursor,
   getSelectedELement,
-  updateElement,
+  getValidElements,
+  getUpdatedElement,
 } from "../utils/whiteboardUtils";
 import { useHistory } from "../hooks/useHistory";
 import { setSelectedMenu } from "../redux/reducers/MenuReducer";
 import { documentApi } from "../service/api";
-import { constants } from "../constants/apiConstants";
+const { v4: uuidv4 } = require("uuid");
 
 const Whiteboard = ({ socket }) => {
   const menu = useSelector((state) => state.menu);
   const { color, size, selectedMenu } = menu;
+  const login = useSelector((state) => state.login);
+  const { _id: userId } = login;
   const dispatch = useDispatch();
 
   const { id: documentId } = useParams();
   // canvas and context
   const [canvas, setCanvas] = useState(null);
   const [context, setContext] = useState(null);
+  const [boundingClientRect, setBoundingClientRect] = useState({
+    top: 0,
+    left: 0,
+  });
   const [roughContext, setRoughContext] = useState(null);
   const [generator, setGenerator] = useState(null);
 
   // created paths
-  const [elements, setElements, undo, redo] = useHistory([]);
+  const [userElements, setUserElements, undo, redo] = useHistory([]);
+  const [blockedElementId, setBlockedElementId] = useState(new Set());
+  const [otherUserElements, setOtherUserElements] = useState([]);
   const [drawing, setDrawing] = useState(false);
   const [selectedElement, setSelectedElement] = useState(null);
   const { id: params } = useParams();
@@ -42,6 +52,10 @@ const Whiteboard = ({ socket }) => {
     setContext(canvas.getContext("2d"));
     setRoughContext(rough.canvas(canvas));
     setGenerator(rough.canvas(canvas).generator);
+    setBoundingClientRect({
+      top: canvas.getBoundingClientRect().top,
+      left: canvas.getBoundingClientRect().left,
+    });
     socket.connect();
     return () => {
       socket.disconnect();
@@ -49,47 +63,55 @@ const Whiteboard = ({ socket }) => {
   }, [canvas, socket]);
 
   useEffect(() => {
-    socket.emit("get-document", documentId);
-    socket.on("receive-changes-wb", (data) => {
-      console.log(data);
-    });
-  }, [socket]);
-  useEffect(() => {
     documentApi.getDocument(params.split(":")[1], (resp) =>
-      setElements(resp.document.data, true)
+      setUserElements(resp.document.data, true)
     );
   }, []);
 
   useEffect(() => {
-    documentApi.getDocument(
-      params.split(":")[1],
-      (resp) => setElements(resp.document.data, true),
-      (err) => console.error(err)
-    );
-  }, []);
+    socket.emit("join-document", documentId);
+    socket.emit("get-whiteboard-data", (data) => {});
+    socket.on("block-whiteboard-elementId", (elementId) => {
+      blockedElementId.add(elementId);
+      // remove element Id from user
+    });
+    socket.on("unblock-whiteboard-elementId", (elementId) => {
+      blockedElementId.delete(elementId);
+    });
+    socket.on("updated-whiteboard-data", (newpayload) => {
+      let { keys, elementMap } = newpayload;
+
+      let deserializedElementMap = new Map(Object.entries(elementMap));
+
+      const valuesExceptUserId = [];
+      keys
+        .filter((key) => key !== userId)
+        .forEach((key) => {
+          let keyArray = deserializedElementMap.get(key);
+          valuesExceptUserId.push(...keyArray);
+        });
+      setOtherUserElements(valuesExceptUserId);
+    });
+  }, [socket]);
 
   useEffect(() => {
     if (!context) return;
-    if (elements !== undefined && elements.length > 0) {
+    if (userElements !== undefined) {
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      // console.log({ userElements, otherUserElements, blockedElementId });
       selectedElement !== null &&
         selectedMenu === WhiteboardMenuConstants.MOVE &&
-        roughContext.draw(selectedElement.path);
-      elements?.forEach(({ path }, idx) => {
+        roughContext.draw(getBoundaryElement(selectedElement, generator).path);
+      otherUserElements?.forEach(({ path }, idx) => {
         roughContext.draw(path);
       });
-      let payload = {
-        elements: elements,
-        uuid: constants._id,
-      };
-      socket.emit("send-changes-wb", payload);
+      userElements?.forEach(({ path }, idx) => {
+        roughContext.draw(path);
+      });
     }
-  }, [elements, drawing]);
+  }, [userElements, otherUserElements]);
 
   useEffect(() => {
-    if (selectedMenu !== WhiteboardMenuConstants.MOVE) {
-      setSelectedElement(null);
-    }
     switch (selectedMenu) {
       case WhiteboardMenuConstants.REDO:
         setTimeout(() => dispatch(setSelectedMenu(null)), 100);
@@ -102,7 +124,7 @@ const Whiteboard = ({ socket }) => {
       case WhiteboardMenuConstants.SAVE: {
         documentApi.saveDocument({
           documentId: params.split(":")[1],
-          data: elements,
+          data: userElements,
           name: document.title,
         });
         setTimeout(() => dispatch(setSelectedMenu(null)), 100);
@@ -113,71 +135,76 @@ const Whiteboard = ({ socket }) => {
     }
   }, [selectedMenu]);
 
-  const getAttributes = (e, canvas) => {
-    let { clientX: positionX, clientY: positionY } = e;
-    let top = 0,
-      left = 0;
-    if (canvas?.getBoundingClientRect()) {
-      top = canvas.getBoundingClientRect().top;
-      left = canvas.getBoundingClientRect().left;
-    }
+  const getAttributes = (event) => {
+    let { clientX: positionX, clientY: positionY } = event;
 
     let attributes = {
       color,
       size,
-      currX: positionX - left,
-      currY: positionY - top,
-      prevX: positionX - left,
-      prevY: positionY - top,
+      currX: positionX - boundingClientRect.left,
+      currY: positionY - boundingClientRect.top,
+      prevX: positionX - boundingClientRect.left,
+      prevY: positionY - boundingClientRect.top,
     };
     return attributes;
   };
-  const setSelectedBoundary = (event, elements, generator, canvas) => {
-    let { top, left } = canvas.getBoundingClientRect();
-    if (elements.length > 0) {
+  const setSelectedBoundary = (event, Elements) => {
+    if (Elements.length > 0) {
       let selectedElement = getSelectedELement(
-        { x: event.clientX - left, y: event.clientY - top },
-        elements,
-        generator
+        {
+          x: event.clientX - boundingClientRect.left,
+          y: event.clientY - boundingClientRect.top,
+        },
+        Elements
       );
-
+      let payload = {
+        data: selectedElement,
+      };
+      socket.emit("block-whiteboard-elementId", payload);
+      setOtherUserElements((prev) =>
+        prev.filter((item) => item.id !== selectedElement.id)
+      );
+      setUserElements((prev) => {
+        let element = prev.filter((item) => item.id !== selectedElement.id);
+        return element.length > 0
+          ? [...element, selectedElement]
+          : [selectedElement];
+      });
       setSelectedElement(selectedElement);
+      return selectedElement.id;
     }
+    return null;
   };
-  const handleMouseMove = (e) => {
+
+  function handleMouseMove(e) {
     let mouseAction = "default";
+    let attributes = getAttributes(e, canvas);
     if (WhiteboardMenuConstants.MOVE) {
-      mouseAction = getMouseCursor(selectedElement, getAttributes(e, canvas));
+      mouseAction = getMouseCursor(selectedElement, attributes);
       e.target.style.cursor = mouseAction;
     }
-    if (!drawing) return;
-    let attributes = getAttributes(e, canvas);
-    if (selectedMenu !== null) {
-      let index = elements.length - 1;
-      if (index < 0) return;
-      if (selectedMenu === WhiteboardMenuConstants.ERASE) {
-        let elementsCopy = [...elements];
-        elementsCopy = elementsCopy.filter(({ id }, idx) => {
-          return id !== selectedElement.id;
-        });
-        setElements(elementsCopy, true);
-      } else {
-        if (selectedMenu === WhiteboardMenuConstants.MOVE) {
-          index = selectedElement.id;
-        }
-        let prevElement = elements[index];
-        let updatedElement = updateElement(
-          prevElement,
-          attributes,
-          generator,
-          selectedMenu
-        );
-        let elementsCopy = [...elements];
-        elementsCopy[index] = updatedElement;
-        setElements(elementsCopy, true);
-      }
+    if (selectedMenu !== null && drawing) {
+      let prevElement = selectedElement;
+      let updatedElement = getUpdatedElement(
+        prevElement,
+        attributes,
+        generator,
+        selectedMenu
+      );
+      setSelectedElement(updatedElement);
+      let elementsCopy = userElements?.length > 0 ? [...userElements] : [];
+      elementsCopy = elementsCopy.filter(
+        (item) => item.id !== updatedElement?.id
+      );
+      elementsCopy = [...elementsCopy, updatedElement];
+      setUserElements(elementsCopy, true);
+      let payload = {
+        data: elementsCopy,
+        userId: userId,
+      };
+      socket.emit("updated-whiteboard-data", payload);
     }
-  };
+  }
 
   const handleMouseDown = (event) => {
     setDrawing(true);
@@ -187,23 +214,58 @@ const Whiteboard = ({ socket }) => {
         selectedMenu === WhiteboardMenuConstants.MOVE ||
         selectedMenu === WhiteboardMenuConstants.ERASE
       ) {
-        setSelectedBoundary(event, elements, generator, canvas);
+        let selectedElementId = setSelectedBoundary(
+          event,
+          getValidElements(userElements, otherUserElements, blockedElementId)
+        );
+        if (selectedMenu === WhiteboardMenuConstants.ERASE) {
+          let elementsCopy = userElements.length > 0 ? [...userElements] : [];
+          elementsCopy = elementsCopy.filter((item, idx) => {
+            let { currX, currY, prevX, prevY } = item.attributes;
+            return (
+              item.id !== selectedElementId &&
+              !(currX === prevX && currY === prevY)
+            );
+          });
+          setUserElements(elementsCopy, true);
+          let payload = {
+            data: elementsCopy,
+            userId: userId,
+          };
+          socket.emit("updated-whiteboard-data", payload);
+        }
       } else {
-        let id = elements.length;
+        let id = uuidv4();
         let element = configureElement(id, attributes, generator, selectedMenu);
-        setElements((prev) => [...prev, element]);
+        let elementsCopy =
+          userElements.length > 0 ? [...userElements, element] : [element];
+        elementsCopy = elementsCopy.filter((item, index) => {
+          let { currX, currY, prevX, prevY } = item.attributes;
+          return !(currX === prevX && currY === prevY);
+        });
+        setUserElements(elementsCopy);
+        let payload = {
+          data: elementsCopy,
+          userId: userId,
+        };
+        socket.emit("updated-whiteboard-data", payload);
+        setSelectedElement(element);
+        payload = {
+          data: element,
+        };
+        socket.emit("block-whiteboard-elementId", payload);
       }
     }
   };
   const handleMouseUp = (event) => {
     setDrawing(false);
-    let elementsCopy = [...elements];
-    elementsCopy = elementsCopy.filter(({ attributes }, index) => {
-      let { currX, currY, prevX, prevY, color } = attributes;
-      return !(currX === prevX && currY === prevY);
-    });
-    setElements(elementsCopy);
+    let payload = {
+      data: selectedElement,
+    };
+    socket.emit("unblock-whiteboard-elementId", payload);
+    setSelectedElement(null);
   };
+
   return (
     <div className="flex flex-col">
       <div className=" border p-1 " style={{ left: 0, top: 0 }}>

@@ -1,5 +1,6 @@
 const express = require("express");
 const userModel = require("../model/user.Schema");
+const documentModel = require("../model/document.Schema");
 const router = express.Router();
 const { getToken, verifyToken } = require("../utils/tokenUtils");
 
@@ -93,6 +94,26 @@ router
         res.status(200).json({ documents: modifiedDocuments });
       })
       .catch((err) => next(err));
+  })
+  .post("/addUsers", verifyToken, async (req, res, next) => {
+    let { usernames, documentId } = req.body;
+    try {
+      const users = await userModel.find({ username: { $in: usernames } });
+      const userIds = users.map((user) => user._id);
+      const documentUpdate = await documentModel.findByIdAndUpdate(
+        documentId,
+        { $addToSet: { users: { $each: userIds } } },
+        { new: true }
+      );
+      const userUpdate = await userModel.updateMany(
+        { username: { $in: usernames } },
+        { $addToSet: { documents: documentId } }
+      );
+
+      res.status(200).json({ documentUpdate, userUpdate });
+    } catch (err) {
+      next(err);
+    }
   });
 
 module.exports = router;

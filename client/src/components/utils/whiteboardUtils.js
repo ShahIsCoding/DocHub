@@ -1,4 +1,3 @@
-import { access } from "../constants/DocumentOptions";
 import { WhiteboardMenuConstants } from "../constants/WhiteboardOptions";
 import {
   distanceFromPointToLine,
@@ -8,6 +7,8 @@ import {
   nearestELement,
 } from "./RandomUtils";
 
+const abs = (a) => Math.abs(a);
+
 const Drawing = (id, generator, attributes, type) => {
   const { LINE } = WhiteboardMenuConstants;
   let { currX, currY, prevX, prevY, previousPath, color } = attributes;
@@ -15,8 +16,9 @@ const Drawing = (id, generator, attributes, type) => {
     let path = generator.line(prevX, prevY, currX, currY, {
       roughness: 1,
       stroke: attributes.color,
+      strokeWidth: attributes.size,
     });
-    return { id, attributes, path, type, access: access.free };
+    return { id, attributes, path, type };
   }
   let currentPath = [];
   previousPath?.forEach((item, indx) => {
@@ -39,10 +41,10 @@ const Drawing = (id, generator, attributes, type) => {
   });
   const updatedAttributes = { ...attributes, previousPath: currentPath };
 
-  return { id, attributes: updatedAttributes, path, type, access: access.free };
+  return { id, attributes: updatedAttributes, path, type };
 };
 const Arc = (id, generator, attributes, type) => {
-  let { currX, currY, prevX, prevY, color, size } = attributes;
+  let { currX, currY, prevX, prevY, color } = attributes;
   let width = currX - prevX;
   let height = currY - prevY;
   let radius = Math.max(Math.abs(width) + 1, Math.abs(height) + 1);
@@ -59,7 +61,7 @@ const Arc = (id, generator, attributes, type) => {
       stroke: color,
     }
   );
-  return { id, attributes, path, type, access: access.free };
+  return { id, attributes, path, type };
 };
 
 function QuadCurve(id, generator, attributes, type) {
@@ -77,11 +79,16 @@ function QuadCurve(id, generator, attributes, type) {
     roughness: 0.9,
     stroke: color,
   });
-  return { id, attributes, path, type, access: access.free };
+  return { id, attributes, path, type };
 }
-const updateElement = (element, currAttributes, generator, selectedMenu) => {
-  const { PEN, SQUARE, RECTANGLE, LINE, MOVE, CIRCLE } =
-    WhiteboardMenuConstants;
+const getUpdatedElement = (
+  element,
+  currAttributes,
+  generator,
+  selectedMenu
+) => {
+  const { PEN, MOVE } = WhiteboardMenuConstants;
+  if (!element) return;
   let { id, type, attributes: prevAttributes } = element;
 
   if (selectedMenu === MOVE) {
@@ -123,7 +130,7 @@ const configureElement = (id, attributes, generator, type) => {
   }
 };
 
-const getSelectedELement = (pos, elements, generator) => {
+const getSelectedELement = (pos, elements) => {
   let { x, y } = pos;
   const { SQUARE, RECTANGLE, PEN } = WhiteboardMenuConstants;
   let filteredElements = elements.filter(({ type, attributes, id }, idx) => {
@@ -138,9 +145,11 @@ const getSelectedELement = (pos, elements, generator) => {
         return isOnLine(x, y, currX, currY, prevX, prevY);
     }
   });
-  let element = JSON.parse(
-    JSON.stringify(nearestELement(filteredElements, pos))
-  );
+  return nearestELement(filteredElements, pos);
+};
+
+const getBoundaryElement = (el, generator) => {
+  let element = JSON.parse(JSON.stringify(el));
   let offset = 10;
   let newAttributes = {
     currX: element.attributes.currX + offset,
@@ -155,12 +164,19 @@ const getSelectedELement = (pos, elements, generator) => {
     generator,
     element.type
   );
-  console.log(res);
   return res;
 };
-
-const abs = (a) => Math.abs(a);
-
+function getValidElements(userElements, otherUserElements, blockedElementId) {
+  let validElements = [];
+  userElements
+    .filter((item) => !blockedElementId.has(item.id))
+    .forEach((item) => validElements.push(item));
+  otherUserElements
+    .filter((item) => !blockedElementId.has(item.id))
+    .forEach((item) => validElements.push(item));
+  console.log(validElements);
+  return validElements;
+}
 const getMouseCursor = (element, attributes) => {
   if (attributes === null || element === null) return "default";
   let { currX, currY, prevX, prevY } = element.attributes;
@@ -193,4 +209,11 @@ const getMouseCursor = (element, attributes) => {
 
   return "default";
 };
-export { configureElement, getSelectedELement, updateElement, getMouseCursor };
+export {
+  configureElement,
+  getSelectedELement,
+  getUpdatedElement,
+  getMouseCursor,
+  getBoundaryElement,
+  getValidElements,
+};
