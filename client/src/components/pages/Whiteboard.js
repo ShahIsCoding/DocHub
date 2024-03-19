@@ -79,6 +79,10 @@ const Whiteboard = ({ socket }) => {
       blockedElementId.delete(elementId);
     });
     socket.on("updated-whiteboard-data", (newpayload) => {
+      // console.log("inside update-whiteBoard", {
+      //   otherUserElements,
+      //   userElements,
+      // });
       let { keys, elementMap } = newpayload;
 
       let deserializedElementMap = new Map(Object.entries(elementMap));
@@ -192,7 +196,7 @@ const Whiteboard = ({ socket }) => {
         selectedMenu
       );
       setSelectedElement(updatedElement);
-      let elementsCopy = userElements?.length > 0 ? [...userElements] : [];
+      let elementsCopy = userElements;
       elementsCopy = elementsCopy.filter(
         (item) => item.id !== updatedElement?.id
       );
@@ -219,7 +223,7 @@ const Whiteboard = ({ socket }) => {
           getValidElements(userElements, otherUserElements, blockedElementId)
         );
         if (selectedMenu === WhiteboardMenuConstants.ERASE) {
-          let elementsCopy = userElements.length > 0 ? [...userElements] : [];
+          let elementsCopy = userElements;
           elementsCopy = elementsCopy.filter((item, idx) => {
             let { currX, currY, prevX, prevY } = item.attributes;
             return (
@@ -237,8 +241,8 @@ const Whiteboard = ({ socket }) => {
       } else {
         let id = uuidv4();
         let element = configureElement(id, attributes, generator, selectedMenu);
-        let elementsCopy =
-          userElements.length > 0 ? [...userElements, element] : [element];
+        let elementsCopy = userElements;
+        elementsCopy = [...elementsCopy, element];
         elementsCopy = elementsCopy.filter((item, index) => {
           let { currX, currY, prevX, prevY } = item.attributes;
           return !(currX === prevX && currY === prevY);

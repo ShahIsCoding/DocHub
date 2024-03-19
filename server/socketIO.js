@@ -8,10 +8,10 @@ function handleIO(io) {
       socket.join(documentId);
       socket.on("block-whiteboard-elementId", (payload) => {
         let { data: element } = payload;
-        let elementId = element.id;
+        let elementId = element?.id;
         if (!blockedId.has(elementId)) {
           blockedId.add(elementId);
-          socket.broadcast.emit("block-whiteboard-elementId", blockedId);
+          socket.broadcast.emit("block-whiteboard-elementId", elementId);
         }
       });
       socket.on("unblock-whiteboard-elementId", (payload) => {
